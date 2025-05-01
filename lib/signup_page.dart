@@ -26,94 +26,101 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text('User Registration'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text('User Registration'),
+        centerTitle: true,
+        backgroundColor: Colors.deepPurple,
+        elevation: 0,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Role Selector
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8FFE8),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: ['Student', 'Teacher', 'Shopkeeper'].map((role) {
-                  bool isSelected = role == selectedRole;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() {
-                        selectedRole = role;
-                        _clearFields();
-                      }),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isSelected ? Colors.green : Colors.transparent,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          role,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.bold,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Role Selector
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.purple.shade300, Colors.deepPurple.shade300],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: ['Student', 'Teacher', 'Shopkeeper'].map((role) {
+                    bool isSelected = role == selectedRole;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() {
+                          selectedRole = role;
+                          _clearFields();
+                        }),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.greenAccent : Colors.transparent,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            role,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Input Fields
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    ..._buildFieldsForRole(),
-                    _buildTextField('Password', passwordController, obscureText: true),
-                    _buildTextField('Confirm Password', confirmPasswordController, obscureText: true),
-                    CheckboxListTile(
-                      value: termsAccepted,
-                      onChanged: (value) => setState(() => termsAccepted = value!),
-                      title: const Text('I agree to the terms & conditions'),
-                      controlAffinity: ListTileControlAffinity.leading,
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: termsAccepted ? _register : null,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 50),
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text('Register', style: TextStyle(fontSize: 16)),
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: _showAboutUs,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 50),
-                        backgroundColor: Colors.blue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text('About Us', style: TextStyle(fontSize: 16)),
-                    ),
-                  ],
+                    );
+                  }).toList(),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+
+              // Input Fields
+              Column(
+                children: [
+                  ..._buildFieldsForRole(),
+                  _buildTextField('Password', passwordController, obscureText: true),
+                  _buildTextField('Confirm Password', confirmPasswordController, obscureText: true),
+                  CheckboxListTile(
+                    value: termsAccepted,
+                    onChanged: (value) => setState(() => termsAccepted = value!),
+                    title: const Text('I agree to the terms & conditions'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: termsAccepted ? _register : null,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      backgroundColor: Colors.greenAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: const Text('Register', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: _showAboutUs,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      backgroundColor: Colors.blueAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: const Text('About Us', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -199,6 +206,7 @@ class _SignUpPageState extends State<SignUpPage> {
         decoration: InputDecoration(
           labelText: label,
           border: const UnderlineInputBorder(),
+          focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.deepPurple)),
         ),
       ),
     );

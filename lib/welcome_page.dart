@@ -22,21 +22,30 @@ class WelcomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF26B0AE),
       appBar: AppBar(
-        backgroundColor: Colors.teal[700],
+        backgroundColor: Colors.teal[800],
         title: const Text('Welcome'),
         centerTitle: true,
+        elevation: 10,
       ),
       body: Center(
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.95),
-            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [
+                Colors.teal.shade400,
+                Colors.cyan.shade300,
+                Colors.green.shade300,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
+                color: Colors.black26,
+                blurRadius: 15,
                 offset: Offset(0, 4),
               ),
             ],
@@ -44,25 +53,48 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, size: 80, color: Colors.green),
-              const SizedBox(height: 16),
+              AnimatedContainer(
+                duration: const Duration(seconds: 1),
+                child: const Icon(Icons.check_circle, size: 100, color: Colors.white),
+              ),
+              const SizedBox(height: 20),
               Text(
                 'Welcome, ${userDetails.name}!',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      offset: Offset(2, 2),
+                      blurRadius: 3,
+                      color: Colors.black54,
+                    ),
+                  ],
+                ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
-              Text('Role: ${userDetails.role}', style: const TextStyle(fontSize: 16)),
-              Text('Email: ${userDetails.email}', style: const TextStyle(fontSize: 16)),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              Text(
+                'Role: ${userDetails.role}',
+                style: const TextStyle(fontSize: 18, color: Colors.white),
+              ),
+              Text(
+                'Email: ${userDetails.email}',
+                style: const TextStyle(fontSize: 18, color: Colors.white),
+              ),
+              const SizedBox(height: 32),
               ElevatedButton.icon(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Back to Sign Up'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
+                  backgroundColor: Colors.teal.shade800,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  elevation: 5,
+                  shadowColor: Colors.black45,
+                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ],

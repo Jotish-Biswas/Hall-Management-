@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:url_launcher/url_launcher.dart'; // Ensure you have the 'url_launcher' package added
 
 class AboutUsPage extends StatelessWidget {
   const AboutUsPage({super.key});
@@ -28,8 +28,11 @@ class AboutUsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.teal[700],
         title: const Text('About Us'),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -37,7 +40,11 @@ class AboutUsPage extends StatelessWidget {
           children: [
             const Text(
               'Our Team',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white
+              ),
             ),
             const SizedBox(height: 20),
             _buildTeamCard(
@@ -46,6 +53,7 @@ class AboutUsPage extends StatelessWidget {
               role: 'Team Lead',
               email: 'dipta@gmail.com',
               imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
+              roleColor: Colors.deepOrange,
             ),
             const SizedBox(height: 16),
             _buildTeamCard(
@@ -54,6 +62,7 @@ class AboutUsPage extends StatelessWidget {
               role: 'Developer',
               email: 'nadim@gmail.com',
               imageUrl: 'https://randomuser.me/api/portraits/women/1.jpg',
+              roleColor: Colors.blue,
             ),
             const SizedBox(height: 16),
             _buildTeamCard(
@@ -62,6 +71,7 @@ class AboutUsPage extends StatelessWidget {
               role: 'Developer',
               email: 'tamal@gmail.com',
               imageUrl: 'https://randomuser.me/api/portraits/men/2.jpg',
+              roleColor: Colors.green,
             ),
             const SizedBox(height: 16),
             _buildTeamCard(
@@ -70,25 +80,12 @@ class AboutUsPage extends StatelessWidget {
               role: 'Developer',
               email: 'jotish@gmail.com',
               imageUrl: 'https://randomuser.me/api/portraits/men/2.jpg',
+              roleColor: Colors.purple,
             ),
             const SizedBox(height: 30),
             Center(
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                ),
-                child: const Text(
-                  'Back to Home',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
+              child: _buildBackButton(context),
             ),
-
           ],
         ),
       ),
@@ -101,9 +98,12 @@ class AboutUsPage extends StatelessWidget {
         required String role,
         required String email,
         required String imageUrl,
+        required Color roleColor,
       }) {
     return Card(
-      elevation: 3,
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -119,16 +119,17 @@ class AboutUsPage extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: roleColor,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     role,
                     style: TextStyle(
-                      color: Colors.grey[600],
+                      color: roleColor.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -151,7 +152,22 @@ class AboutUsPage extends StatelessWidget {
     );
   }
 
-  canLaunchUrl(Uri emailUri) {}
-
-  launchUrl(Uri emailUri) {}
+  Widget _buildBackButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => Navigator.pop(context),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.teal,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25),
+        ),
+        elevation: 5,
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      child: const Text(
+        'Back to Home',
+        style: TextStyle(color: Colors.white),
+      ),
+    );
+  }
 }

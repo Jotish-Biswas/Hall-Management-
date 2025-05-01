@@ -22,18 +22,26 @@ class _LoginPageState extends State<LoginPage> {
           'Hall Management',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.blue,
+            color: Colors.white,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.blue),
+        backgroundColor: Colors.teal,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.teal.shade300, Colors.blue.shade200],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Role Selector
+            // Role Selector with Dynamic Styling
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
@@ -51,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
                         duration: const Duration(milliseconds: 300),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.blue : Colors.transparent,
+                          color: isSelected ? Colors.blueAccent : Colors.transparent,
                           borderRadius: BorderRadius.circular(30),
                         ),
                         alignment: Alignment.center,
@@ -71,28 +79,28 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 20),
 
-            // Email & Password
+            // Email & Password TextFields with Enhanced Styles
             _buildTextField('Email or Username', emailController),
             _buildTextField('Password', passwordController, obscureText: true),
 
             const SizedBox(height: 20),
 
-            // Login Button
+            // Login Button with Gradient
             ElevatedButton(
               onPressed: _login,
               style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.blue,
+                minimumSize: const Size(double.infinity, 50), backgroundColor: Colors.blue, // Set primary color for the button
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
                 ),
+                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              child: const Text('Login', style: TextStyle(fontSize: 16)),
+              child: const Text('Login'),
             ),
 
             const SizedBox(height: 20),
 
-            // Sign Up & Forgot Password
+            // Sign Up & Forgot Password with Text Styling
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -113,10 +121,15 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
 
-
-            TextButton(
-              onPressed: () => Navigator.pushNamed(context, '/about'),
-              child: const Text('About Us'),
+            // About Us link
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/about'),
+                child: const Text(
+                  'About Us',
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
             ),
           ],
         ),
@@ -132,7 +145,13 @@ class _LoginPageState extends State<LoginPage> {
         obscureText: obscureText,
         decoration: InputDecoration(
           labelText: label,
-          border: const UnderlineInputBorder(),
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          labelStyle: const TextStyle(color: Colors.blueGrey),
         ),
       ),
     );
