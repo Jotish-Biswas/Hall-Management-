@@ -3,6 +3,10 @@ import 'signup_page.dart';
 import 'about_page.dart';
 import 'welcome_page.dart';
 import 'login.dart'; // Import the login page
+String? registeredEmail;
+String? registeredPassword;
+String? registeredRole;
+String? registeredName;
 
 void main() {
   runApp(const MyApp());

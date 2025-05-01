@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'welcome_page.dart'; // Ensure this file defines the UserDetails class
+import 'welcome_page.dart';
+import 'main.dart';// Ensure this file defines the UserDetails class
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -257,5 +258,10 @@ class _SignUpPageState extends State<SignUpPage> {
       '/welcome',
       arguments: user,
     );
+    registeredEmail = email;
+    registeredPassword = password;
+    registeredRole = selectedRole;
+    registeredName = fullName;
+
   }
 }

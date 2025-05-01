@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'welcome_page.dart';
+import 'signup_page.dart';
+import 'main.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -141,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
   void _login() {
     String email = emailController.text.trim();
     String password = passwordController.text;
-
+    bool isValidEmail = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email);
     if (email.isEmpty || password.isEmpty) {
       _showMessage('Please fill in both fields.');
       return;
@@ -151,6 +153,16 @@ class _LoginPageState extends State<LoginPage> {
       _showMessage('Password must be at least 6 characters.');
       return;
     }
+    if (!isValidEmail) {
+      _showMessage('Please enter a valid email address.');
+      return;
+    }
+    if (email != registeredEmail || password != registeredPassword || selectedRole != registeredRole) {
+      _showMessage('Incorrect email or password.');
+      return;
+    }
+
+
 
     final user = UserDetails(
       role: selectedRole,
