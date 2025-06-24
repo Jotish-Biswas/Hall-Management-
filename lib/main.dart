@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'signup_page.dart';
 import 'about_page.dart';
-import 'welcome_page.dart';
-import 'login.dart'; // Import the login page
+import 'login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,16 +25,7 @@ class MyApp extends StatelessWidget {
         '/about': (context) => const AboutUsPage(),
         '/signup': (context) => const SignUpPage(),
       },
-      // Handle routes that need arguments
-      onGenerateRoute: (settings) {
-        if (settings.name == '/welcome') {
-          final args = settings.arguments as UserDetails;
-          return MaterialPageRoute(
-            builder: (context) => WelcomePage(userDetails: args),
-          );
-        }
-        return null; // Unknown route
-      },
     );
+
   }
 }

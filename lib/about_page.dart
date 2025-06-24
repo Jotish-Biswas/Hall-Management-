@@ -43,7 +43,7 @@ class AboutUsPage extends StatelessWidget {
             _buildTeamCard(
               context,
               name: 'Dipta',
-              role: 'Team Lead',
+              role: 'Team Leader',
               email: 'dipta@gmail.com',
               imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
             ),

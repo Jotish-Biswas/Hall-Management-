@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'welcome_page.dart';
+import 'student_home.dart';
+import 'teacher_home.dart';
+import 'shopkeeper_home.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -87,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
                   borderRadius: BorderRadius.circular(25),
                 ),
               ),
-              child: const Text('Login', style: TextStyle(fontSize: 16)),
+              child: const Text('Login', style: TextStyle(fontSize: 16,color: Colors.white)),
             ),
 
             const SizedBox(height: 20),
@@ -116,7 +119,11 @@ class _LoginPageState extends State<LoginPage> {
 
             TextButton(
               onPressed: () => Navigator.pushNamed(context, '/about'),
-              child: const Text('About Us'),
+              child: const Text('About Us',
+               style: TextStyle(
+                 color: Colors.blue
+               ),
+              ),
             ),
           ],
         ),
@@ -152,18 +159,25 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    final user = UserDetails(
-      role: selectedRole,
-      name: email,
-      email: email,
-    );
+    if (selectedRole == 'Student') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => StudentHomePage(name: email)),
+      );
+    } else if (selectedRole == 'Teacher') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => TeacherHomePage(name: email)),
+      );
+    } else if (selectedRole == 'Shopkeeper') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ShopkeeperHomePage(name: email)),
+      );
+    }
 
-    Navigator.pushNamed(
-      context,
-      '/welcome',
-      arguments: user,
-    );
   }
+
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));

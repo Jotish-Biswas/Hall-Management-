@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'welcome_page.dart'; // Ensure this file defines the UserDetails class
+import 'student_home.dart';
+import 'teacher_home.dart';
+import 'shopkeeper_home.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -246,16 +249,22 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
-    final user = UserDetails(
-      role: selectedRole,
-      name: fullName,
-      email: email,
-    );
-
-    Navigator.pushNamed(
-      context,
-      '/welcome',
-      arguments: user,
-    );
+    // Navigate based on role
+    if (selectedRole == 'Student') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => StudentHomePage(name: fullName)),
+      );
+    } else if (selectedRole == 'Teacher') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => TeacherHomePage(name: fullName)),
+      );
+    } else if (selectedRole == 'Shopkeeper') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => ShopkeeperHomePage(name: fullName)),
+      );
+    }
   }
 }
