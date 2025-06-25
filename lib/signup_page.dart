@@ -3,6 +3,9 @@ import 'welcome_page.dart'; // Ensure this file defines the UserDetails class
 import 'student_home.dart';
 import 'teacher_home.dart';
 import 'shopkeeper_home.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -223,48 +226,94 @@ class _SignUpPageState extends State<SignUpPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _register() {
-    String email = field7Controller.text.trim();
-    String password = passwordController.text;
-    String confirmPassword = confirmPasswordController.text;
-    String fullName = field1Controller.text.trim();
-
-    if (!email.contains('@') || !email.contains('.')) {
-      _showMessage('Please enter a valid email.');
-      return;
-    }
-
-    if (password.length < 6) {
-      _showMessage('Password must be at least 6 characters.');
-      return;
-    }
-
-    if (password != confirmPassword) {
-      _showMessage('Passwords do not match.');
-      return;
-    }
-
-    if (fullName.isEmpty) {
-      _showMessage('Full Name is required.');
-      return;
-    }
-
-    // Navigate based on role
-    if (selectedRole == 'Student') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => StudentHomePage(name: fullName)),
-      );
-    } else if (selectedRole == 'Teacher') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => TeacherHomePage(name: fullName)),
-      );
-    } else if (selectedRole == 'Shopkeeper') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ShopkeeperHomePage(name: fullName)),
-      );
+  Future<void> sendSignUp(Map<String, dynamic> payload) async {
+    final uri = Uri.parse('http://127.0.0.1:8000/signup');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to register: ${response.body}');
+      throw Exception('Failed to register: ${response.body}');
     }
   }
+
+  void _register() async {
+    final email    = field7Controller.text.trim();
+    final password = passwordController.text;
+    final confirm  = confirmPasswordController.text;
+    final fullName = field1Controller.text.trim();
+    // Simple client-side checks
+    if (!email.contains('@') || !email.contains('.')) {
+      return _showMessage('Please enter a valid email.');
+    }
+    if (password.length < 6) {
+      return _showMessage('Password must be at least 6 characters.');
+    }
+    if (password != confirm) {
+      return _showMessage('Passwords do not match.');
+    }
+    if (fullName.isEmpty) {
+      return _showMessage('Full Name is required.');
+    }
+    if (!termsAccepted) {
+      return _showMessage('You must accept terms & conditions.');
+    }
+
+    // Build the payload
+    final payload = {
+      'full_name': fullName,
+      'email': email,
+      'password': password,
+      'role': selectedRole,
+      'extra': {
+        if (selectedRole == 'Student') ...{
+          'roll_no': field3Controller.text.trim(),
+          'department': field2Controller.text.trim(),
+          'session': field5Controller.text.trim(),
+          'registration_no': field4Controller.text.trim(),
+          'dob': field6Controller.text.trim(),
+        } else if (selectedRole == 'Teacher') ...{
+          'teacher_reg_no': field2Controller.text.trim(),
+          'department': field3Controller.text.trim(),
+          'phone': field4Controller.text.trim(),
+          'address': field5Controller.text.trim(),
+        } else if (selectedRole == 'Shopkeeper') ...{
+          'shop_type': field2Controller.text.trim(),
+          'phone': field3Controller.text.trim(),
+        }
+      }
+    };
+
+    // Call API
+    try {
+      // show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      await sendSignUp(payload);
+      Navigator.of(context).pop(); // remove loading
+
+      // On success, navigate by role
+      Widget nextPage;
+      if (selectedRole == 'Student') {
+        nextPage = StudentHomePage(name: fullName);
+      } else if (selectedRole == 'Teacher') {
+        nextPage = TeacherHomePage(name: fullName);
+      } else {
+        nextPage = ShopkeeperHomePage(name: fullName);
+      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => nextPage),
+      );
+    } catch (e) {
+      Navigator.of(context).pop(); // remove loading
+      _showMessage(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
 }

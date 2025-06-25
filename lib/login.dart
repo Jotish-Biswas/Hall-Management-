@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'student_home.dart';
 import 'teacher_home.dart';
 import 'shopkeeper_home.dart';
+import 'Admin_home.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 
 class LoginPage extends StatefulWidget {
@@ -45,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: ['Student', 'Teacher', 'Shopkeeper'].map((role) {
+                children: ['Student', 'Teacher', 'Shopkeeper', 'Admin'].map((role) {
                   bool isSelected = role == selectedRole;
                   return Expanded(
                     child: GestureDetector(
@@ -145,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _login() {
+  void _login() async {
     String email = emailController.text.trim();
     String password = passwordController.text;
 
@@ -154,28 +157,50 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    if (password.length < 6) {
-      _showMessage('Password must be at least 6 characters.');
-      return;
-    }
+    final url = Uri.parse("http://127.0.0.1:8000/login");
 
-    if (selectedRole == 'Student') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => StudentHomePage(name: email)),
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email,
+          "password": password,
+          "role": selectedRole,
+        }),
       );
-    } else if (selectedRole == 'Teacher') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => TeacherHomePage(name: email)),
-      );
-    } else if (selectedRole == 'Shopkeeper') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => ShopkeeperHomePage(name: email)),
-      );
-    }
 
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        String name = data["name"];
+        if (selectedRole == 'Student') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => StudentHomePage(name: name)),
+          );
+        } else if (selectedRole == 'Teacher') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => TeacherHomePage(name: name)),
+          );
+        } else if (selectedRole == 'Shopkeeper') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => ShopkeeperHomePage(name: name)),
+          );
+        } else if (selectedRole == 'Admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminHomePage(name: name)),
+          );
+        }
+      } else {
+        final error = jsonDecode(response.body);
+        _showMessage("Login failed: ${error['detail']}");
+      }
+    } catch (e) {
+      _showMessage("Error: $e");
+    }
   }
 
 
