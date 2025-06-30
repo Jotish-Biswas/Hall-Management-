@@ -5,7 +5,7 @@ import 'shopkeeper_home.dart';
 import 'Admin_home.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -93,12 +93,12 @@ class _LoginPageState extends State<LoginPage> {
                   borderRadius: BorderRadius.circular(25),
                 ),
               ),
-              child: const Text('Login', style: TextStyle(fontSize: 16,color: Colors.white)),
+              child: const Text('Login', style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
 
             const SizedBox(height: 20),
 
-            // Sign Up & Forgot Password
+            // Sign Up & Forgot Password & About Us
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -110,23 +110,23 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/forgot_password'),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                  ),
                   child: const Text(
                     'Forgot Password?',
                     style: TextStyle(color: Colors.blue),
                   ),
                 ),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/about'),
+                  child: const Text(
+                    'About Us',
+                    style: TextStyle(color: Colors.blue),
+                  ),
+                ),
               ],
-            ),
-
-
-            TextButton(
-              onPressed: () => Navigator.pushNamed(context, '/about'),
-              child: const Text('About Us',
-               style: TextStyle(
-                 color: Colors.blue
-               ),
-              ),
             ),
           ],
         ),
@@ -202,7 +202,6 @@ class _LoginPageState extends State<LoginPage> {
       _showMessage("Error: $e");
     }
   }
-
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
