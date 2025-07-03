@@ -1,0 +1,2 @@
+C:/Users/HP/AndroidStudioProjects/Hall-Management-/android/app/.cxx/Debug/332h7010/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/HP/AndroidStudioProjects/Hall-Management-/android/app/.cxx/Debug/332h7010/armeabi-v7a/CMakeFiles/rebuild_cache.dir

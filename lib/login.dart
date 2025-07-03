@@ -3,6 +3,7 @@ import 'student_home.dart';
 import 'teacher_home.dart';
 import 'shopkeeper_home.dart';
 import 'Admin_home.dart';
+import 'waiting_approval_page.dart'; // Page for unapproved teachers
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'forgot_password_page.dart';
@@ -17,7 +18,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
   String selectedRole = 'Student';
 
   @override
@@ -26,10 +26,7 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         title: const Text(
           'Hall Management',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -77,10 +74,9 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 20),
 
-            // Email & Password
+            // Email & Password Fields
             _buildTextField('Email or Username', emailController),
             _buildTextField('Password', passwordController, obscureText: true),
-
             const SizedBox(height: 20),
 
             // Login Button
@@ -98,33 +94,24 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 20),
 
-            // Sign Up & Forgot Password & About Us
+            // Sign Up & Forgot Password
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 TextButton(
                   onPressed: () => Navigator.pushNamed(context, '/signup'),
-                  child: const Text(
-                    'Sign Up',
-                    style: TextStyle(color: Colors.blue),
-                  ),
+                  child: const Text('Sign Up', style: TextStyle(color: Colors.blue)),
                 ),
                 TextButton(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                    MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
                   ),
-                  child: const Text(
-                    'Forgot Password?',
-                    style: TextStyle(color: Colors.blue),
-                  ),
+                  child: const Text('Forgot Password?', style: TextStyle(color: Colors.blue)),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pushNamed(context, '/about'),
-                  child: const Text(
-                    'About Us',
-                    style: TextStyle(color: Colors.blue),
-                  ),
+                  child: const Text('About Us', style: TextStyle(color: Colors.blue)),
                 ),
               ],
             ),
@@ -134,7 +121,8 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool obscureText = false}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {bool obscureText = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
@@ -173,26 +161,25 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         String name = data["name"];
+
+        // Handle role-based redirection
         if (selectedRole == 'Student') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => StudentHomePage(name: name)),
-          );
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (_) => StudentHomePage(name: name)));
         } else if (selectedRole == 'Teacher') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => TeacherHomePage(name: name)),
-          );
+          if (data.containsKey("approved") && data["approved"] == false) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)));
+          } else {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (_) => TeacherHomePage(name: name)));
+          }
         } else if (selectedRole == 'Shopkeeper') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => ShopkeeperHomePage(name: name)),
-          );
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (_) => ShopkeeperHomePage(name: name)));
         } else if (selectedRole == 'Admin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => AdminHomePage(name: name)),
-          );
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (_) => AdminHomePage(name: name,email: email)));
         }
       } else {
         final error = jsonDecode(response.body);

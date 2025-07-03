@@ -5,6 +5,8 @@ import 'teacher_home.dart';
 import 'shopkeeper_home.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'waiting_approval_page.dart';
+
 
 
 class SignUpPage extends StatefulWidget {
@@ -302,7 +304,7 @@ class _SignUpPageState extends State<SignUpPage> {
       if (selectedRole == 'Student') {
         nextPage = StudentHomePage(name: fullName);
       } else if (selectedRole == 'Teacher') {
-        nextPage = TeacherHomePage(name: fullName);
+        nextPage = WaitingApprovalPage(name: fullName);
       } else {
         nextPage = ShopkeeperHomePage(name: fullName);
       }
