@@ -4,6 +4,7 @@ import 'user_list_page.dart';
 import 'post_notice_page.dart';
 import 'login.dart';
 import 'profile_page.dart';
+import 'notice_page.dart';
 
 class AdminHomePage extends StatefulWidget {
   final String name;
@@ -25,7 +26,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     super.initState();
     _pages = [
       _buildDashboardPage(),
-      _buildAlertsPage(),
+      const NoticePage(),
       const UserListPage(),
       ProfilePage(email: widget.email),
     ];
@@ -154,7 +155,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Alerts"),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notice"),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: "Users"),
           BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: "Profile"),
         ],
