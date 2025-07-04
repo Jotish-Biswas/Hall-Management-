@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'shopkeeper_profile.dart';
-// import 'Inventory.dart';  // Import your Inventory page here
+import 'user_notice_page.dart';
 
 class ShopkeeperHomePage extends StatefulWidget {
   final String name;
@@ -70,7 +70,7 @@ class _ShopkeeperHomePageState extends State<ShopkeeperHomePage> {
       case 0:
         return _buildMainPage();
       case 1:
-        return const Center(child: Text("Notice Page Coming Soon..."));
+        return User_NoticePage();
       case 2:
         return const Center(child: Text("Chat Page Coming Soon..."));
       default:

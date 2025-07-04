@@ -172,7 +172,7 @@ class _LoginPageState extends State<LoginPage> {
                 MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)));
           } else {
             Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => TeacherHomePage(name: name, email: email)));
+                MaterialPageRoute(builder: (_) => TeacherHompepage(name: name, email: email)));
           }
         } else if (selectedRole == 'Shopkeeper') {
           Navigator.pushReplacement(context,

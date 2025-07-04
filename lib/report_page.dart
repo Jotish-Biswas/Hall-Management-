@@ -1,23 +1,26 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'notice_detail_page.dart';
+import 'report_detail_page.dart';
 
-class Notice {
+class Report {
   final String id;
+  final String email;
   final String title;
   final String message;
   final DateTime timestamp;
 
-  Notice({
+  Report({
+    required this.email,
     required this.id,
     required this.title,
     required this.message,
     required this.timestamp,
   });
 
-  factory Notice.fromJson(Map<String, dynamic> json) {
-    return Notice(
+  factory Report.fromJson(Map<String, dynamic> json) {
+    return Report(
+      email: json['email'],
       id: json['id'],
       title: json['title'],
       message: json['message'],
@@ -26,16 +29,16 @@ class Notice {
   }
 }
 
-class NoticePage extends StatefulWidget {
-  const NoticePage({super.key});
+class ReportPage extends StatefulWidget {
+  const ReportPage({super.key});
 
   @override
-  State<NoticePage> createState() => _NoticePageState();
+  State<ReportPage> createState() => _ReportPageState();
 }
 
-class _NoticePageState extends State<NoticePage> {
-  List<Notice> _allNotices = [];
-  List<Notice> _filteredNotices = [];
+class _ReportPageState extends State<ReportPage> {
+  List<Report> _allReports = [];
+  List<Report> _filteredReports= [];
   bool _isLoading = true;
   String _errorMessage = '';
 
@@ -45,8 +48,8 @@ class _NoticePageState extends State<NoticePage> {
   @override
   void initState() {
     super.initState();
-    fetchNotices();
-    _searchController.addListener(_filterNotices);
+    fetchReports();
+    _searchController.addListener(_filterReports);
   }
 
   @override
@@ -55,15 +58,15 @@ class _NoticePageState extends State<NoticePage> {
     super.dispose();
   }
 
-  Future<void> fetchNotices() async {
+  Future<void> fetchReports() async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:8000/notices'));
+      final response = await http.get(Uri.parse('http://127.0.0.1:8000/reports'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        _allNotices = data.map((json) => Notice.fromJson(json)).toList();
-        _filteredNotices = List.from(_allNotices);
+        _allReports = data.map((json) => Report.fromJson(json)).toList();
+        _filteredReports = List.from(_allReports);
       } else {
-        _errorMessage = 'Failed to load notices: ${response.statusCode}';
+        _errorMessage = 'Failed to load reports: ${response.statusCode}';
       }
     } catch (e) {
       _errorMessage = 'Error: $e';
@@ -73,28 +76,28 @@ class _NoticePageState extends State<NoticePage> {
     });
   }
 
-  void _filterNotices() {
+  void _filterReports() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       if (query.isEmpty) {
-        _filteredNotices = List.from(_allNotices);
+        _filteredReports = List.from(_allReports);
       } else {
-        _filteredNotices = _allNotices.where((notice) {
-          final titleLower = notice.title.toLowerCase();
-          final messageLower = notice.message.toLowerCase();
+        _filteredReports = _allReports.where((report) {
+          final titleLower = report.title.toLowerCase();
+          final messageLower = report.message.toLowerCase();
           return titleLower.contains(query) || messageLower.contains(query);
         }).toList();
       }
     });
   }
 
-  Future<void> deleteNotice(String noticeId) async {
-    final url = Uri.parse('http://127.0.0.1:8000/notices/$noticeId');
+  Future<void> deleteReport(String reportId) async {
+    final url = Uri.parse('http://127.0.0.1:8000/reports/$reportId');
     final response = await http.delete(url);
     if (response.statusCode == 200) {
       setState(() {
-        _allNotices.removeWhere((notice) => notice.id == noticeId);
-        _filteredNotices.removeWhere((notice) => notice.id == noticeId);
+        _allReports.removeWhere((notice) => notice.id == reportId);
+        _filteredReports.removeWhere((notice) => notice.id == reportId);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Notice deleted successfully')),
@@ -116,7 +119,7 @@ class _NoticePageState extends State<NoticePage> {
     setState(() {
       _isSearching = false;
       _searchController.clear();
-      _filteredNotices = List.from(_allNotices);
+      _filteredReports = List.from(_allReports);
     });
   }
 
@@ -145,7 +148,7 @@ class _NoticePageState extends State<NoticePage> {
         ),
       );
     } else {
-      return const Text('Notice Board');
+      return const Text('Reports List');
     }
   }
 
@@ -169,6 +172,7 @@ class _NoticePageState extends State<NoticePage> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: _buildAppBarTitle(),
@@ -179,20 +183,31 @@ class _NoticePageState extends State<NoticePage> {
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage.isNotEmpty
           ? Center(child: Text(_errorMessage))
-          : _filteredNotices.isEmpty
-          ? const Center(child: Text("No notices found"))
+          : _filteredReports.isEmpty
+          ? const Center(child: Text("No reports found"))
           : ListView.builder(
-        itemCount: _filteredNotices.length,
+        itemCount: _filteredReports.length,
         itemBuilder: (context, index) {
-         final notice = _filteredNotices[index];
+          final report = _filteredReports[index];
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: ListTile(
-              title: Text(notice.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(
-                "Posted: ${notice.timestamp.toLocal().toString().split(' ')[0]}",
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              title: Text(
+                report.title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Posted by: ${report.email}",
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  Text(
+                    "Posted on: ${report.timestamp.toLocal().toString().split(' ')[0]}",
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -204,7 +219,7 @@ class _NoticePageState extends State<NoticePage> {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Confirm Delete'),
-                          content: const Text('Are you sure you want to delete this notice?'),
+                          content: const Text('Are you sure you want to delete this report?'),
                           actions: [
                             TextButton(
                               child: const Text('Cancel'),
@@ -219,7 +234,7 @@ class _NoticePageState extends State<NoticePage> {
                       );
 
                       if (confirmed ?? false) {
-                        await deleteNotice(notice.id);
+                        await deleteReport(report.id);
                       }
                     },
                   ),
@@ -230,11 +245,12 @@ class _NoticePageState extends State<NoticePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => NoticeDetailPage(notice: notice),
+                    builder: (_) => ReportDetailPage(report: report),
                   ),
                 );
               },
-            ),
+            )
+            ,
           );
         },
       ),

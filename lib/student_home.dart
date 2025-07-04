@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'student_profile.dart';
-import 'login.dart'; 
+import 'login.dart';
+import 'user_notice_page.dart';
+import 'post_report_page.dart';
 
 class StudentHomePage extends StatefulWidget {
   final String name;
@@ -19,7 +21,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
   Widget build(BuildContext context) {
     List<Widget> pages = [
       _buildMainPage(),
-      const Center(child: Text("Notice Page Coming Soon...")),
+      User_NoticePage(),
       const Center(child: Text("Chat Page Coming Soon...")),
       StudentProfilePage(email: widget.email),
     ];
@@ -27,19 +29,19 @@ class _StudentHomePageState extends State<StudentHomePage> {
     return Scaffold(
       appBar: _selectedIndex == 0
           ? AppBar(
-              backgroundColor: Colors.lightBlue,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-              title: const Text(
-                "Student Dashboard",
-                style: TextStyle(color: Colors.white),
-              ),
-              centerTitle: true,
-            )
+        backgroundColor: Colors.lightBlue,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: const Text(
+          "Student Dashboard",
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+      )
           : null,
       backgroundColor: Colors.lightBlue[50],
       body: SafeArea(child: pages[_selectedIndex]),
@@ -93,9 +95,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: const Text("Main Menu", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        const Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Text("Main Menu", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         ),
         Expanded(
           child: GridView.count(
@@ -104,28 +106,91 @@ class _StudentHomePageState extends State<StudentHomePage> {
             crossAxisSpacing: 15,
             mainAxisSpacing: 15,
             children: [
-              menuTile(Icons.schedule, "Room Application", Colors.blueAccent),
-              menuTile(Icons.assignment, "Canteen", Colors.orange),
-              menuTile(Icons.grade, "Library", Colors.green),
-              menuTile(Icons.library_books, "Emergency Service", Colors.pinkAccent),
+              MenuTile(
+                icon: Icons.schedule,
+                title: "Room Application",
+                color: Colors.blueAccent,
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => const Placeholder(), // Replace with actual page
+                  ));
+                },
+              ),
+              MenuTile(
+                icon: Icons.assignment,
+                title: "Canteen",
+                color: Colors.orange,
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => const Placeholder(), // Replace with actual page
+                  ));
+                },
+              ),
+              MenuTile(
+                icon: Icons.grade,
+                title: "Post Reports",
+                color: Colors.green,
+                onTap: () {
+            Navigator.push(context, MaterialPageRoute(
+           builder: (_) => PostReportPage(email: widget.email),
+             ));
+            },
+              ),
+              MenuTile(
+                icon: Icons.library_books,
+                title: "Emergency Service",
+                color: Colors.pinkAccent,
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => const Placeholder(), // Replace with actual page
+                  ));
+                },
+              ),
             ],
           ),
         ),
       ],
     );
   }
+}
 
-  static Widget menuTile(IconData icon, String title, Color color) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: ListTile(
-          leading: Icon(icon, color: Colors.white, size: 30),
-          title: Text(title,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+class MenuTile extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final Color color;
+  final VoidCallback onTap;
+
+  const MenuTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<MenuTile> createState() => _MenuTileState();
+}
+
+class _MenuTileState extends State<MenuTile> {
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: widget.onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: widget.color.withOpacity(0.8),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: ListTile(
+            leading: Icon(widget.icon, color: Colors.white, size: 30),
+            title: Text(
+              widget.title,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            ),
+          ),
         ),
       ),
     );

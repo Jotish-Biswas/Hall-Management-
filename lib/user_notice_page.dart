@@ -2,38 +2,15 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'notice_detail_page.dart';
-
-class Notice {
-  final String id;
-  final String title;
-  final String message;
-  final DateTime timestamp;
-
-  Notice({
-    required this.id,
-    required this.title,
-    required this.message,
-    required this.timestamp,
-  });
-
-  factory Notice.fromJson(Map<String, dynamic> json) {
-    return Notice(
-      id: json['id'],
-      title: json['title'],
-      message: json['message'],
-      timestamp: DateTime.parse(json['timestamp']),
-    );
-  }
-}
-
-class NoticePage extends StatefulWidget {
-  const NoticePage({super.key});
+import 'notice_page.dart';
+class User_NoticePage extends StatefulWidget {
+  const User_NoticePage({super.key});
 
   @override
-  State<NoticePage> createState() => _NoticePageState();
+  State<User_NoticePage> createState() => User_NoticePageState();
 }
 
-class _NoticePageState extends State<NoticePage> {
+class User_NoticePageState extends State<User_NoticePage> {
   List<Notice> _allNotices = [];
   List<Notice> _filteredNotices = [];
   bool _isLoading = true;
@@ -184,45 +161,45 @@ class _NoticePageState extends State<NoticePage> {
           : ListView.builder(
         itemCount: _filteredNotices.length,
         itemBuilder: (context, index) {
-         final notice = _filteredNotices[index];
+          final notice1 = _filteredNotices[index];
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: ListTile(
-              title: Text(notice.title,
+              title: Text(notice1.title,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(
-                "Posted: ${notice.timestamp.toLocal().toString().split(' ')[0]}",
+                "Posted: ${notice1.timestamp.toLocal().toString().split(' ')[0]}",
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Confirm Delete'),
-                          content: const Text('Are you sure you want to delete this notice?'),
-                          actions: [
-                            TextButton(
-                              child: const Text('Cancel'),
-                              onPressed: () => Navigator.pop(context, false),
-                            ),
-                            TextButton(
-                              child: const Text('Delete'),
-                              onPressed: () => Navigator.pop(context, true),
-                            ),
-                          ],
-                        ),
-                      );
-
-                      if (confirmed ?? false) {
-                        await deleteNotice(notice.id);
-                      }
-                    },
-                  ),
+                  // IconButton(
+                  //   icon: const Icon(Icons.delete, color: Colors.red),
+                  //   onPressed: () async {
+                  //     final confirmed = await showDialog<bool>(
+                  //       context: context,
+                  //       builder: (context) => AlertDialog(
+                  //         title: const Text('Confirm Delete'),
+                  //         content: const Text('Are you sure you want to delete this notice?'),
+                  //         actions: [
+                  //           TextButton(
+                  //             child: const Text('Cancel'),
+                  //             onPressed: () => Navigator.pop(context, false),
+                  //           ),
+                  //           TextButton(
+                  //             child: const Text('Delete'),
+                  //             onPressed: () => Navigator.pop(context, true),
+                  //           ),
+                  //         ],
+                  //       ),
+                  //     );
+                  //
+                  //     if (confirmed ?? false) {
+                  //       await deleteNotice(notice1.id);
+                  //     }
+                  //   },
+                  // ),
                   const Icon(Icons.arrow_forward_ios, size: 14),
                 ],
               ),
@@ -230,7 +207,7 @@ class _NoticePageState extends State<NoticePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => NoticeDetailPage(notice: notice),
+                    builder: (_) => NoticeDetailPage(notice: notice1),
                   ),
                 );
               },

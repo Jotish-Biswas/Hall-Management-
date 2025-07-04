@@ -5,6 +5,7 @@ import 'post_notice_page.dart';
 import 'login.dart';
 import 'profile_page.dart';
 import 'notice_page.dart';
+import 'report_page.dart';
 
 class AdminHomePage extends StatefulWidget {
   final String name;
@@ -13,10 +14,10 @@ class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key, required this.name, required this.email});
 
   @override
-  State<AdminHomePage> createState() => _AdminHomePageState();
+  State<AdminHomePage> createState() => AdminHomePageState();
 }
 
-class _AdminHomePageState extends State<AdminHomePage> {
+class AdminHomePageState extends State<AdminHomePage> {
   int _selectedIndex = 0;
 
   late final List<Widget> _pages;
@@ -106,9 +107,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 _menuTile(
                   context,
                   Icons.report,
-                  "See UserList",
+                  "See Report List",
                   Colors.orange,
-                  const UserListPage(),
+                  const ReportPage(),
                 ),
                 _menuTile(
                   context,
