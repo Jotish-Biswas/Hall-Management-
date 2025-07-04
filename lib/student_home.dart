@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'student_profile.dart';
+import 'login.dart'; 
 
 class StudentHomePage extends StatefulWidget {
   final String name;
+  final String email;
 
-  const StudentHomePage({super.key, required this.name});
+  const StudentHomePage({super.key, required this.name, required this.email});
 
   @override
   State<StudentHomePage> createState() => _StudentHomePageState();
@@ -16,13 +18,29 @@ class _StudentHomePageState extends State<StudentHomePage> {
   @override
   Widget build(BuildContext context) {
     List<Widget> pages = [
-      _buildMainPage(), // index 0
-      const Center(child: Text("Notice Page Coming Soon...")), // index 1
-      const Center(child: Text("Chat Page Coming Soon...")), // index 2
-      StudentProfilePage(name: widget.name, email: "student@email.com"), // index 3
+      _buildMainPage(),
+      const Center(child: Text("Notice Page Coming Soon...")),
+      const Center(child: Text("Chat Page Coming Soon...")),
+      StudentProfilePage(email: widget.email),
     ];
 
     return Scaffold(
+      appBar: _selectedIndex == 0
+          ? AppBar(
+              backgroundColor: Colors.lightBlue,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              title: const Text(
+                "Student Dashboard",
+                style: TextStyle(color: Colors.white),
+              ),
+              centerTitle: true,
+            )
+          : null,
       backgroundColor: Colors.lightBlue[50],
       body: SafeArea(child: pages[_selectedIndex]),
       bottomNavigationBar: BottomNavigationBar(
@@ -44,7 +62,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Container(
           color: Colors.lightBlue,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -57,12 +74,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text("Campus News", style: TextStyle(color: Colors.white70)),
-                ],
-              ),
+              const Text("Campus News", style: TextStyle(color: Colors.white70)),
               const SizedBox(height: 10),
               Container(
                 height: 120,
@@ -83,12 +95,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
         ),
         Padding(
           padding: const EdgeInsets.all(20.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text("Main Menu", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            ],
-          ),
+          child: const Text("Main Menu", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         ),
         Expanded(
           child: GridView.count(
