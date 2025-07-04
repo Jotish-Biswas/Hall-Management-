@@ -104,6 +104,31 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
     }
   }
 
+  Widget buildUserDetails(Map<String, dynamic> user) {
+    switch (currentRole) {
+      case "Student":
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Department: ${user['department'] ?? 'N/A'}"),
+            Text("Session: ${user['session'] ?? 'N/A'}"),
+            Text("Email: ${user['email']}"),
+          ],
+        );
+      case "Teacher":
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Department: ${user['department'] ?? 'N/A'}"),
+            Text("Email: ${user['email']}"),
+          ],
+        );
+      case "Shopkeeper":
+      default:
+        return Text("Email: ${user['email']}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -185,24 +210,38 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : users.isEmpty
-            ? Center(child: Text("No $currentRole users found."))
-            : ListView.builder(
-          itemCount: users.length,
-          itemBuilder: (context, index) {
-            final user = users[index];
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: ListTile(
-                title: Text(user['full_name']),
-                subtitle: Text("Role: ${user['role']}  •  Email: ${user['email']}"),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.black),
-                  onPressed: () => deleteUser(user['email']),
-                ),
+            : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                "Total $currentRole${users.length == 1 ? '' : 's'}: ${users.length}",
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-            );
-          },
+            ),
+            Expanded(
+              child: users.isEmpty
+                  ? Center(child: Text("No $currentRole users found."))
+                  : ListView.builder(
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: ListTile(
+                      title: Text(user['full_name']),
+                      subtitle: buildUserDetails(user),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.black),
+                        onPressed: () => deleteUser(user['email']),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
