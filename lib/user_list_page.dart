@@ -72,10 +72,11 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
   Future<void> deleteUser(String email) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/users/delete'),
+        Uri.parse('http://127.0.0.1:8000/users/delete'), // ❗️admin route
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
+
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Deleted $email")),
@@ -90,6 +91,7 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
       print("Delete error: $e");
     }
   }
+
 
   Color getTabColor(int index) {
     switch (index) {

@@ -7,19 +7,20 @@ import 'login.dart';
 import 'profile_page.dart';
 import 'notice_page.dart';
 import 'report_page.dart';
+import 'approval_by_teacher.dart';
+import 'teacher_user_list_page.dart';
 
-
-class TeacherHompepage extends StatefulWidget {
+class TeacherHomepage extends StatefulWidget {
   final String name;
   final String email;
 
-  const TeacherHompepage ({super.key, required this.name, required this.email});
+  const TeacherHomepage ({super.key, required this.name, required this.email});
 
   @override
-  State<TeacherHompepage > createState() => TeacherHompepageState();
+  State<TeacherHomepage > createState() => TeacherHomepageState();
 }
 
-class  TeacherHompepageState extends State<TeacherHompepage > {
+class  TeacherHomepageState extends State<TeacherHomepage > {
   int _selectedIndex = 0;
 
   late final List<Widget> _pages;
@@ -30,7 +31,7 @@ class  TeacherHompepageState extends State<TeacherHompepage > {
     _pages = [
       _buildDashboardPage(),
       const NoticePage(),
-      const UserListPage(),
+      const TeacherUserListPage(),
       ProfilePage(email: widget.email),
     ];
   }
@@ -104,13 +105,8 @@ class  TeacherHompepageState extends State<TeacherHompepage > {
                   Icons.verified_user,
                   "Student Approvals",
                   Colors.blue,
-                 const  Center(
-                   child: Text(
-                     "Coming Soon...",
-                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                   ),
-                 ),
-
+                  const  TeacherApprovalPage(),
+                 // const UserListPage(),
                 ),
                 _menuTile(
                   context,

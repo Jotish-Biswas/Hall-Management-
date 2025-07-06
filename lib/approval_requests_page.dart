@@ -9,45 +9,56 @@ class ApprovalRequestsPage extends StatefulWidget {
   State<ApprovalRequestsPage> createState() => _ApprovalRequestsPageState();
 }
 
-class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> {
-  List<Map<String, dynamic>> unapprovedTeachers = [];
+class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  List<Map<String, dynamic>> students = [];
+  List<Map<String, dynamic>> teachers = [];
+  List<Map<String, dynamic>> shopkeepers = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchUnapprovedTeachers();
+    _tabController = TabController(length: 3, vsync: this);
+    fetchAllUnapproved();
   }
 
-  Future<void> fetchUnapprovedTeachers() async {
+  Future<void> fetchAllUnapproved() async {
+    setState(() => isLoading = true);
+
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:8000/teachers/unapproved'));
+      // Use new admin endpoint
+      final response = await http.get(Uri.parse('http://127.0.0.1:8000/admin/unapproved'));
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        final List<dynamic> userList = data['users'];
+
         setState(() {
-          unapprovedTeachers = List<Map<String, dynamic>>.from(data);
-          isLoading = false;
+          students = userList.where((u) => u['role'] == 'Student').map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+          teachers = userList.where((u) => u['role'] == 'Teacher').map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+          shopkeepers = userList.where((u) => u['role'] == 'Shopkeeper').map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
         });
       } else {
-        throw Exception("Failed to fetch teachers");
+        print("Fetch failed: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error: $e");
-      setState(() => isLoading = false);
+      print("Error fetching users: $e");
     }
+
+    setState(() => isLoading = false);
   }
 
-  Future<void> approveTeacher(String email) async {
+  Future<void> approveUser(String email) async {
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/teachers/approve'),
+        Uri.parse('http://127.0.0.1:8000/admin/approve'),  // Admin endpoint
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Approved $email")));
-        fetchUnapprovedTeachers(); // Refresh list
+        fetchAllUnapproved();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to approve $email")));
       }
@@ -56,17 +67,17 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> {
     }
   }
 
-  Future<void> declineTeacher(String email) async {
+  Future<void> declineUser(String email) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/teachers/decline'),
+        Uri.parse('http://127.0.0.1:8000/admin/decline'),  // Admin endpoint
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Declined $email")));
-        fetchUnapprovedTeachers(); // Refresh list
+        fetchAllUnapproved();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to decline $email")));
       }
@@ -75,51 +86,81 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> {
     }
   }
 
+  Widget buildUserList(List<Map<String, dynamic>> users, String role) {
+    if (users.isEmpty) return Center(child: Text("No unapproved $role found."));
+
+    return ListView.builder(
+      itemCount: users.length,
+      itemBuilder: (context, index) {
+        final user = users[index];
+        final extra = user['extra'] ?? {};
+
+        return Card(
+          margin: const EdgeInsets.all(10),
+          child: ListTile(
+            title: Text(user['full_name']),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Email: ${user['email']}"),
+                if (role == "Student") ...[
+                  Text("Department: ${extra['department'] ?? 'N/A'}"),
+                  Text("Session: ${extra['session'] ?? 'N/A'}"),
+                ] else if (role == "Teacher") ...[
+                  Text("Reg No: ${extra['teacher_reg_no'] ?? 'N/A'}"),
+                  Text("Department: ${extra['department'] ?? 'N/A'}"),
+                ] else if (role == "Shopkeeper") ...[
+                  Text("Shop Type: ${extra['shop_type'] ?? 'N/A'}"),
+                  Text("Phone: ${extra['phone'] ?? 'N/A'}"),
+                ]
+              ],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: () => approveUser(user['email']),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: const Text("Approve"),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () => declineUser(user['email']),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: const Text("Decline"),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Approval Requests"), backgroundColor: Colors.blueGrey),
+      appBar: AppBar(
+        title: const Text("Admin Approval Requests"),
+        backgroundColor: Colors.blueGrey,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: "Students"),
+            Tab(text: "Teachers"),
+            Tab(text: "Shopkeepers"),
+          ],
+        ),
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : unapprovedTeachers.isEmpty
-          ? const Center(child: Text("No unapproved teachers found."))
-          : ListView.builder(
-        itemCount: unapprovedTeachers.length,
-        itemBuilder: (context, index) {
-          final teacher = unapprovedTeachers[index];
-          final extra = teacher['extra'] ?? {};
-          final regNo = extra['teacher_reg_no'] ?? "N/A";
-
-          return Card(
-            margin: const EdgeInsets.all(10),
-            child: ListTile(
-              title: Text(teacher['full_name']),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Email: ${teacher['email']}"),
-                  Text("Reg No: $regNo"),
-                ],
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => approveTeacher(teacher['email']),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text("Approve"),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () => declineTeacher(teacher['email']),
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    child: const Text("Decline"),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+          : TabBarView(
+        controller: _tabController,
+        children: [
+          buildUserList(students, "Student"),
+          buildUserList(teachers, "Teacher"),
+          buildUserList(shopkeepers, "Shopkeeper"),
+        ],
       ),
     );
   }

@@ -302,11 +302,11 @@ class _SignUpPageState extends State<SignUpPage> {
       // On success, navigate by role
       Widget nextPage;
       if (selectedRole == 'Student') {
-        nextPage = StudentHomePage(name: fullName, email: email);
+        nextPage = WaitingApprovalPage(name: fullName);
       } else if (selectedRole == 'Teacher') {
         nextPage = WaitingApprovalPage(name: fullName);
       } else {
-        nextPage = ShopkeeperHomePage(name: fullName, email: email);
+        nextPage = WaitingApprovalPage(name: fullName);
       }
       Navigator.pushReplacement(
         context,

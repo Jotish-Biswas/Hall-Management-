@@ -164,19 +164,31 @@ class _LoginPageState extends State<LoginPage> {
 
         // Handle role-based redirection
         if (selectedRole == 'Student') {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (_) => StudentHomePage(name: name, email: email)));
+          if (data.containsKey("approved") && data["approved"] == false) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)));
+          }else {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(
+                    builder: (_) => StudentHomePage(name: name, email: email)));
+          }
         } else if (selectedRole == 'Teacher') {
           if (data.containsKey("approved") && data["approved"] == false) {
             Navigator.pushReplacement(context,
                 MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)));
           } else {
             Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => TeacherHompepage(name: name, email: email)));
+                MaterialPageRoute(builder: (_) => TeacherHomepage(name: name, email: email)));
           }
         } else if (selectedRole == 'Shopkeeper') {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (_) => ShopkeeperHomePage(name: name, email: email)));
+          if (data.containsKey("approved") && data["approved"] == false) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)));
+          }else {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (_) =>
+                    ShopkeeperHomePage(name: name, email: email)));
+          }
         } else if (selectedRole == 'Admin') {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (_) => AdminHomePage(name: name, email: email)));
