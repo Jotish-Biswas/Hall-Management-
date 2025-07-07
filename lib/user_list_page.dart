@@ -72,11 +72,10 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
   Future<void> deleteUser(String email) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/users/delete'), // ❗️admin route
+        Uri.parse('http://127.0.0.1:8000/users/delete'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
-
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Deleted $email")),
@@ -92,7 +91,6 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
     }
   }
 
-
   Color getTabColor(int index) {
     switch (index) {
       case 0:
@@ -103,6 +101,31 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
         return Colors.cyan;
       default:
         return Colors.white;
+    }
+  }
+
+  Widget buildUserDetails(Map<String, dynamic> user) {
+    switch (currentRole) {
+      case "Student":
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Department: ${user['department'] ?? 'N/A'}"),
+            Text("Session: ${user['session'] ?? 'N/A'}"),
+            Text("Email: ${user['email']}"),
+          ],
+        );
+      case "Teacher":
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Department: ${user['department'] ?? 'N/A'}"),
+            Text("Email: ${user['email']}"),
+          ],
+        );
+      case "Shopkeeper":
+      default:
+        return Text("Email: ${user['email']}");
     }
   }
 
@@ -187,24 +210,38 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : users.isEmpty
-            ? Center(child: Text("No $currentRole users found."))
-            : ListView.builder(
-          itemCount: users.length,
-          itemBuilder: (context, index) {
-            final user = users[index];
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: ListTile(
-                title: Text(user['full_name']),
-                subtitle: Text("Role: ${user['role']}  •  Email: ${user['email']}"),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.black),
-                  onPressed: () => deleteUser(user['email']),
-                ),
+            : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                "Total $currentRole${users.length == 1 ? '' : 's'}: ${users.length}",
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-            );
-          },
+            ),
+            Expanded(
+              child: users.isEmpty
+                  ? Center(child: Text("No $currentRole users found."))
+                  : ListView.builder(
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: ListTile(
+                      title: Text(user['full_name']),
+                      subtitle: buildUserDetails(user),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.black),
+                        onPressed: () => deleteUser(user['email']),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
