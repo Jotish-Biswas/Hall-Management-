@@ -6,8 +6,9 @@ import 'login.dart';
 import 'profile_page.dart';
 import 'notice_page.dart';
 import 'report_page.dart';
-import 'admin_create_event_page.dart'; // New import
+import 'admin_create_event_page.dart';
 import 'event_participationList_page.dart';
+import 'teacher_approval.dart'; // Added import for ApprovalPage
 
 class AdminHomePage extends StatefulWidget {
   final String name;
@@ -130,11 +131,18 @@ class AdminHomePageState extends State<AdminHomePage> {
                 _menuTile(
                   context,
                   Icons.event,
-                  "Event_Participation",
+                  "Event Participation",
                   Colors.blue,
                   const AdminEventParticipationPage(),
                 ),
-                _logoutTile(context),
+                // Added seat approval tile here
+                _menuTile(
+                  context,
+                  Icons.event_seat,
+                  "Seat Approvals",
+                  Colors.purple,
+                  ApprovalPage(teacherEmail: widget.email), // Pass admin email
+                ),
               ],
             ),
           ),
@@ -176,22 +184,20 @@ class AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  static Widget _menuTile(
+  Widget _menuTile(
       BuildContext context,
       IconData icon,
       String title,
       Color color,
-      Widget? destinationPage,
+      Widget destinationPage,
       ) {
     return InkWell(
-      onTap: destinationPage != null
-          ? () {
+      onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => destinationPage),
         );
-      }
-          : null,
+      },
       child: Container(
         decoration: BoxDecoration(
           color: color.withOpacity(0.8),
@@ -203,58 +209,6 @@ class AdminHomePageState extends State<AdminHomePage> {
             title: Text(
               title,
               style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  static Widget _logoutTile(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (BuildContext dialogContext) {
-            return AlertDialog(
-              title: const Text("Logout"),
-              content: const Text("Are you sure you want to logout?"),
-              actions: [
-                TextButton(
-                  child: const Text("Cancel"),
-                  onPressed: () => Navigator.pop(dialogContext),
-                ),
-                TextButton(
-                  child: const Text("Logout"),
-                  onPressed: () {
-                    Navigator.pop(dialogContext); // Close dialog
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LoginPage()),
-                          (Route<dynamic> route) => false,
-                    );
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Center(
-          child: ListTile(
-            leading: Icon(Icons.logout, color: Colors.white, size: 30),
-            title: Text(
-              "Logout",
-              style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,

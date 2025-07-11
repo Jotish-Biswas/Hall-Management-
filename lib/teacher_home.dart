@@ -4,23 +4,22 @@ import 'approval_requests_page.dart';
 import 'user_list_page.dart';
 import 'post_notice_page.dart';
 import 'login.dart';
-import 'teacher_profile.dart';
 import 'notice_page.dart';
 import 'report_page.dart';
 import 'approval_by_teacher.dart';
 import 'teacher_user_list_page.dart';
-
+import 'teacher_approval.dart';
 class TeacherHomepage extends StatefulWidget {
   final String name;
   final String email;
 
-  const TeacherHomepage ({super.key, required this.name, required this.email});
+  const TeacherHomepage({super.key, required this.name, required this.email});
 
   @override
-  State<TeacherHomepage > createState() => TeacherHomepageState();
+  State<TeacherHomepage> createState() => TeacherHomepageState();
 }
 
-class  TeacherHomepageState extends State<TeacherHomepage > {
+class TeacherHomepageState extends State<TeacherHomepage> {
   int _selectedIndex = 0;
 
   late final List<Widget> _pages;
@@ -32,7 +31,7 @@ class  TeacherHomepageState extends State<TeacherHomepage > {
       _buildDashboardPage(),
       const NoticePage(),
       const UserListPage(userRole: "teacher"),
-      TeacherProfilePage(email:widget.email),
+      TeacherProfilePage(email: widget.email),
     ];
   }
 
@@ -47,7 +46,8 @@ class  TeacherHomepageState extends State<TeacherHomepage > {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Welcome Teacher,", style: TextStyle(color: Colors.white)),
+                const Text("Welcome Teacher,",
+                    style: TextStyle(color: Colors.white)),
                 Text(
                   widget.name,
                   style: const TextStyle(
@@ -60,7 +60,8 @@ class  TeacherHomepageState extends State<TeacherHomepage > {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: const [
-                    Text("Teacher Dashboard", style: TextStyle(color: Colors.white70)),
+                    Text("Teacher Dashboard",
+                        style: TextStyle(color: Colors.white70)),
                     Icon(Icons.admin_panel_settings, color: Colors.white),
                   ],
                 ),
@@ -87,7 +88,8 @@ class  TeacherHomepageState extends State<TeacherHomepage > {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
-                Text("Main Menu", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                Text("Main Menu",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               ],
             ),
           ),
@@ -105,24 +107,29 @@ class  TeacherHomepageState extends State<TeacherHomepage > {
                   Icons.verified_user,
                   "Student Approvals",
                   Colors.blue,
-                  const  TeacherApprovalPage(),
-                 // const UserListPage(),
+                  const TeacherApprovalPage(),
                 ),
                 _menuTile(
                   context,
                   Icons.report,
                   "See reports List",
                   Colors.orange,
-                 const ReportPage(),
+                  const ReportPage(),
                 ),
                 _menuTile(
                   context,
-                  Icons.settings,
+                  Icons.notification_add, // Better icon for notices
                   "Post Notice",
                   Colors.green,
                   const PostNoticePage(),
                 ),
-                _logoutTile(context),
+                _menuTile(
+                  context,
+                  Icons.event_seat, // Appropriate icon for seat approval
+                  "Approve seats",
+                  Colors.purple,
+                  ApprovalPage(teacherEmail: widget.email), // Pass email
+                ),
               ],
             ),
           ),
@@ -131,15 +138,12 @@ class  TeacherHomepageState extends State<TeacherHomepage > {
     );
   }
 
-  Widget _buildAlertsPage() {
-    return const Center(child: Text('Alerts page'));
-  }
-
   void _onItemTapped(int index) {
     if (index == 3) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => TeacherProfilePage(email: widget.email)),
+        MaterialPageRoute(
+            builder: (_) => TeacherProfilePage(email: widget.email)),
       );
     } else {
       setState(() {
@@ -159,31 +163,32 @@ class  TeacherHomepageState extends State<TeacherHomepage > {
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: "Dashboard"),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notice"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard), label: "Dashboard"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.notifications), label: "Notice"),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: "Users"),
-          BottomNavigationBarItem(icon: Icon(Icons.account_circle), label: "Profile"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle), label: "Profile"),
         ],
       ),
     );
   }
 
-  static Widget _menuTile(
+  Widget _menuTile(
       BuildContext context,
       IconData icon,
       String title,
       Color color,
-      Widget? destinationPage,
+      Widget destinationPage,
       ) {
     return InkWell(
-      onTap: destinationPage != null
-          ? () {
+      onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => destinationPage),
         );
-      }
-          : null,
+      },
       child: Container(
         decoration: BoxDecoration(
           color: color.withOpacity(0.8),
@@ -195,58 +200,6 @@ class  TeacherHomepageState extends State<TeacherHomepage > {
             title: Text(
               title,
               style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  static Widget _logoutTile(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (BuildContext dialogContext) {
-            return AlertDialog(
-              title: const Text("Logout"),
-              content: const Text("Are you sure you want to logout?"),
-              actions: [
-                TextButton(
-                  child: const Text("Cancel"),
-                  onPressed: () => Navigator.pop(dialogContext),
-                ),
-                TextButton(
-                  child: const Text("Logout"),
-                  onPressed: () {
-                    Navigator.pop(dialogContext); // Close dialog
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LoginPage()),
-                          (Route<dynamic> route) => false,
-                    );
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Center(
-          child: ListTile(
-            leading: Icon(Icons.logout, color: Colors.white, size: 30),
-            title: Text(
-              "Logout",
-              style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,

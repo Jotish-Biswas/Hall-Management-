@@ -5,6 +5,10 @@ import 'user_notice_page.dart';
 import 'post_report_page.dart';
 import 'show_event_page.dart';
 import 'shop_list_page.dart';
+import 'chat.dart';
+import 'seat_application.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class StudentHomePage extends StatefulWidget {
   final String name;
@@ -19,12 +23,30 @@ class StudentHomePage extends StatefulWidget {
 class _StudentHomePageState extends State<StudentHomePage> {
   int _selectedIndex = 0;
 
+  Future<bool> _checkIfApproved() async {
+    try {
+      final url = Uri.parse('http://127.0.0.1:8000/api/seat/check-approval?email=${widget.email}');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['approved'] ?? false;
+      } else {
+        print('API Error: ${response.statusCode} - ${response.body}');
+        throw Exception('Failed to check approval status');
+      }
+    } catch (e) {
+      print('Error checking approval status: $e');
+      throw Exception('Connection error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> pages = [
       _buildMainPage(),
       User_NoticePage(),
-      const Center(child: Text("Chat Page Coming Soon...")),
+      ChatPage(studentEmail: widget.email),
       StudentProfilePage(
         email: widget.email,
         onBack: () => setState(() => _selectedIndex = 0),
@@ -34,19 +56,17 @@ class _StudentHomePageState extends State<StudentHomePage> {
     return Scaffold(
       appBar: _selectedIndex == 0
           ? AppBar(
-              backgroundColor: Colors.lightBlue,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () {
-                  Navigator.pop(context); // Exit to login or previous page
-                },
-              ),
-              title: const Text(
-                "Student Dashboard",
-                style: TextStyle(color: Colors.white),
-              ),
-              centerTitle: true,
-            )
+        backgroundColor: Colors.lightBlue,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          "Student Dashboard",
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+      )
           : null,
       backgroundColor: Colors.lightBlue[50],
       body: SafeArea(child: pages[_selectedIndex]),
@@ -116,9 +136,12 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 title: "Room Application",
                 color: Colors.blueAccent,
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => const Placeholder(), // Replace with actual page
-                  ));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SeatApplication(studentEmail: widget.email),
+                    ),
+                  );
                 },
               ),
               MenuTile(
@@ -136,10 +159,60 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 icon: Icons.grade,
                 title: "Post Reports",
                 color: Colors.green,
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => PostReportPage(email: widget.email),
-                  ));
+                onTap: () async {
+                  // Show loading indicator
+                  final navigator = Navigator.of(context);
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => const Center(child: CircularProgressIndicator()),
+                  );
+
+                  try {
+                    final isApproved = await _checkIfApproved();
+
+                    // Close loading indicator
+                    navigator.pop();
+
+                    if (isApproved) {
+                      navigator.push(
+                        MaterialPageRoute(
+                          builder: (_) => PostReportPage(email: widget.email),
+                        ),
+                      );
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Access Denied"),
+                          content: const Text("Only resident students can post reports."),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("OK"),
+                            )
+                          ],
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    // Close loading indicator
+                    navigator.pop();
+
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Connection Error"),
+                        content: const Text("Could not verify your status. Please try again."),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text("OK"),
+                          )
+                        ],
+                      ),
+                    );
+                  }
                 },
               ),
               MenuTile(
@@ -147,9 +220,12 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 title: "Emergency Service",
                 color: Colors.pinkAccent,
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => const Placeholder(), // Replace with actual page
-                  ));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const Placeholder(), // Replace with actual page
+                    ),
+                  );
                 },
               ),
               MenuTile(
@@ -157,12 +233,15 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 title: "Events",
                 color: Colors.deepPurple,
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => StudentEventPage(
-                      studentName: widget.name,
-                      studentEmail: widget.email,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => StudentEventPage(
+                        studentName: widget.name,
+                        studentEmail: widget.email,
+                      ),
                     ),
-                  ));
+                  );
                 },
               ),
             ],
