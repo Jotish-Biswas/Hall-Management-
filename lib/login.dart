@@ -120,6 +120,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+  bool _obscurePassword = true;
 
   Widget _buildTextField(String label, TextEditingController controller,
       {bool obscureText = false}) {
@@ -127,14 +128,27 @@ class _LoginPageState extends State<LoginPage> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
         controller: controller,
-        obscureText: obscureText,
+        obscureText: obscureText ? _obscurePassword : false,
         decoration: InputDecoration(
           labelText: label,
           border: const UnderlineInputBorder(),
+          suffixIcon: obscureText
+              ? IconButton(
+            icon: Icon(
+              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+            ),
+            onPressed: () {
+              setState(() {
+                _obscurePassword = !_obscurePassword;
+              });
+            },
+          )
+              : null,
         ),
       ),
     );
   }
+
 
   void _login() async {
     String email = emailController.text.trim();

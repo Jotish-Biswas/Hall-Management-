@@ -3,6 +3,7 @@ import 'student_profile.dart';
 import 'login.dart';
 import 'user_notice_page.dart';
 import 'post_report_page.dart';
+import 'show_event_page.dart';
 
 class StudentHomePage extends StatefulWidget {
   final String name;
@@ -143,6 +144,17 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(
                     builder: (_) => const Placeholder(), // Replace with actual page
+                  ));
+                },
+              ),
+              MenuTile(
+                icon: Icons.event_available,
+                title: "Events",
+                color: Colors.deepPurple,
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => StudentEventPage(  studentName: widget.name,
+                      studentEmail: widget.email,),
                   ));
                 },
               ),
