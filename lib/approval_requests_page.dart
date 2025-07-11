@@ -142,7 +142,7 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
     return Scaffold(
       appBar: AppBar(
         title: const Text("Admin Approval Requests"),
-        backgroundColor: Colors.blueGrey,
+        backgroundColor: Colors.lightGreenAccent,
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

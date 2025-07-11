@@ -4,7 +4,7 @@ import 'approval_requests_page.dart';
 import 'user_list_page.dart';
 import 'post_notice_page.dart';
 import 'login.dart';
-import 'profile_page.dart';
+import 'teacher_profile.dart';
 import 'notice_page.dart';
 import 'report_page.dart';
 import 'approval_by_teacher.dart';
@@ -31,8 +31,8 @@ class  TeacherHomepageState extends State<TeacherHomepage > {
     _pages = [
       _buildDashboardPage(),
       const NoticePage(),
-      const TeacherUserListPage(),
-      ProfilePage(email: widget.email),
+      const UserListPage(userRole: "teacher"),
+      TeacherProfilePage(email:widget.email),
     ];
   }
 

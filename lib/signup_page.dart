@@ -195,22 +195,50 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
     );
   }
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   Widget _buildTextField(String label, TextEditingController controller,
       {bool obscureText = false, TextInputType keyboardType = TextInputType.text}) {
+    bool isPasswordField = label == 'Password';
+    bool isConfirmField = label == 'Confirm Password';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: TextField(
         controller: controller,
-        obscureText: obscureText,
+        obscureText: obscureText
+            ? (isPasswordField ? _obscurePassword : _obscureConfirmPassword)
+            : false,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
           border: const UnderlineInputBorder(),
+          suffixIcon: obscureText
+              ? IconButton(
+            icon: Icon(
+              (isPasswordField
+                  ? _obscurePassword
+                  : _obscureConfirmPassword)
+                  ? Icons.visibility_off
+                  : Icons.visibility,
+            ),
+            onPressed: () {
+              setState(() {
+                if (isPasswordField) {
+                  _obscurePassword = !_obscurePassword;
+                } else if (isConfirmField) {
+                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                }
+              });
+            },
+          )
+              : null,
         ),
       ),
     );
   }
+
 
   void _clearFields() {
     field1Controller.clear();

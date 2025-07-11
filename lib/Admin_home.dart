@@ -6,6 +6,8 @@ import 'login.dart';
 import 'profile_page.dart';
 import 'notice_page.dart';
 import 'report_page.dart';
+import 'admin_create_event_page.dart'; // New import
+import 'event_participationList_page.dart';
 
 class AdminHomePage extends StatefulWidget {
   final String name;
@@ -28,8 +30,8 @@ class AdminHomePageState extends State<AdminHomePage> {
     _pages = [
       _buildDashboardPage(),
       const NoticePage(),
-      const UserListPage(),
-      ProfilePage(email: widget.email),
+      const UserListPage(userRole: "admin"),
+      ProvostProfilePage(),
     ];
   }
 
@@ -118,6 +120,20 @@ class AdminHomePageState extends State<AdminHomePage> {
                   Colors.green,
                   const PostNoticePage(),
                 ),
+                _menuTile(
+                  context,
+                  Icons.event,
+                  "Create Event",
+                  Colors.deepPurple,
+                  const AdminCreateEventPage(),
+                ),
+                _menuTile(
+                  context,
+                  Icons.event,
+                  "Event_Participation",
+                  Colors.blue,
+                  const AdminEventParticipationPage(),
+                ),
                 _logoutTile(context),
               ],
             ),
@@ -127,15 +143,11 @@ class AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  Widget _buildAlertsPage() {
-    return const Center(child: Text('Alerts page'));
-  }
-
   void _onItemTapped(int index) {
     if (index == 3) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => ProfilePage(email: widget.email)),
+        MaterialPageRoute(builder: (_) => ProvostProfilePage()),
       );
     } else {
       setState(() {
