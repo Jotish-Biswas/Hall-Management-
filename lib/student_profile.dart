@@ -4,8 +4,13 @@ import 'package:http/http.dart' as http;
 
 class StudentProfilePage extends StatefulWidget {
   final String email;
+  final VoidCallback? onBack;
 
-  const StudentProfilePage({super.key, required this.email});
+  const StudentProfilePage({
+    super.key,
+    required this.email,
+    this.onBack,
+  });
 
   @override
   State<StudentProfilePage> createState() => _StudentProfilePageState();
@@ -25,9 +30,6 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     final url = Uri.parse('http://127.0.0.1:8000/student/$encodedEmail');
 
     final response = await http.get(url);
-    print("Looking for student with email: $email");
-    print("Found student: ${response.body}");
-    
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -66,6 +68,14 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
         title: const Text("Student Profile"),
         centerTitle: true,
         backgroundColor: Colors.blue,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (widget.onBack != null) {
+              widget.onBack!(); // Call back to switch tab in StudentHomePage
+            }
+          },
+        ),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: studentData,
@@ -87,48 +97,52 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
 
           return Padding(
             padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                Text(
-                  name,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  email,
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.school, color: Colors.blue),
-                  title: Text("Department: $dept"),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.calendar_today, color: Colors.blue),
-                  title: Text("Session: $session"),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.badge, color: Colors.blue),
-                  title: Text("Roll No: $roll"),
-                ),
-                const SizedBox(height: 40),
-                ElevatedButton.icon(
-                  onPressed: () => _showLogoutConfirmation(context),
-                  icon: const Icon(Icons.logout),
-                  label: const Text("Logout"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  Text(
+                    name,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  Text(
+                    email,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.school, color: Colors.blue),
+                    title: Text("Department: $dept"),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.calendar_today, color: Colors.blue),
+                    title: Text("Session: $session"),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.badge, color: Colors.blue),
+                    title: Text("Roll No: $roll"),
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton.icon(
+                    onPressed: () => _showLogoutConfirmation(context),
+                    icon: const Icon(Icons.logout),
+                    label: const Text("Logout"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },

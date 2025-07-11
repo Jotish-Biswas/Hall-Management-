@@ -4,6 +4,7 @@ import 'login.dart';
 import 'user_notice_page.dart';
 import 'post_report_page.dart';
 import 'show_event_page.dart';
+import 'shop_list_page.dart';
 
 class StudentHomePage extends StatefulWidget {
   final String name;
@@ -24,25 +25,28 @@ class _StudentHomePageState extends State<StudentHomePage> {
       _buildMainPage(),
       User_NoticePage(),
       const Center(child: Text("Chat Page Coming Soon...")),
-      StudentProfilePage(email: widget.email),
+      StudentProfilePage(
+        email: widget.email,
+        onBack: () => setState(() => _selectedIndex = 0),
+      ),
     ];
 
     return Scaffold(
       appBar: _selectedIndex == 0
           ? AppBar(
-        backgroundColor: Colors.lightBlue,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          "Student Dashboard",
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-      )
+              backgroundColor: Colors.lightBlue,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () {
+                  Navigator.pop(context); // Exit to login or previous page
+                },
+              ),
+              title: const Text(
+                "Student Dashboard",
+                style: TextStyle(color: Colors.white),
+              ),
+              centerTitle: true,
+            )
           : null,
       backgroundColor: Colors.lightBlue[50],
       body: SafeArea(child: pages[_selectedIndex]),
@@ -118,13 +122,14 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 },
               ),
               MenuTile(
-                icon: Icons.assignment,
-                title: "Canteen",
+                icon: Icons.store,
+                title: "Shop",
                 color: Colors.orange,
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => const Placeholder(), // Replace with actual page
-                  ));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ShopListPage()),
+                  );
                 },
               ),
               MenuTile(
@@ -132,10 +137,10 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 title: "Post Reports",
                 color: Colors.green,
                 onTap: () {
-            Navigator.push(context, MaterialPageRoute(
-           builder: (_) => PostReportPage(email: widget.email),
-             ));
-            },
+                  Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => PostReportPage(email: widget.email),
+                  ));
+                },
               ),
               MenuTile(
                 icon: Icons.library_books,
@@ -153,8 +158,10 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 color: Colors.deepPurple,
                 onTap: () {
                   Navigator.push(context, MaterialPageRoute(
-                    builder: (_) => StudentEventPage(  studentName: widget.name,
-                      studentEmail: widget.email,),
+                    builder: (_) => StudentEventPage(
+                      studentName: widget.name,
+                      studentEmail: widget.email,
+                    ),
                   ));
                 },
               ),
@@ -166,7 +173,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
   }
 }
 
-class MenuTile extends StatefulWidget {
+class MenuTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final Color color;
@@ -181,25 +188,20 @@ class MenuTile extends StatefulWidget {
   });
 
   @override
-  State<MenuTile> createState() => _MenuTileState();
-}
-
-class _MenuTileState extends State<MenuTile> {
-  @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: widget.onTap,
+      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color: widget.color.withOpacity(0.8),
+          color: color.withOpacity(0.8),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
           child: ListTile(
-            leading: Icon(widget.icon, color: Colors.white, size: 30),
+            leading: Icon(icon, color: Colors.white, size: 30),
             title: Text(
-              widget.title,
+              title,
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ),

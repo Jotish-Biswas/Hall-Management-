@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'shopkeeper_profile.dart';
 import 'user_notice_page.dart';
+import 'inventory_page.dart';
+import 'post_report_page.dart';
 
 class ShopkeeperHomePage extends StatefulWidget {
   final String name;
@@ -33,32 +35,26 @@ class _ShopkeeperHomePageState extends State<ShopkeeperHomePage> {
         centerTitle: true,
       ),
       backgroundColor: Colors.orange[50],
-      body: SafeArea(child: _buildPage(_selectedIndex)),
+      body: SafeArea(child: _buildMainPage()),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
-          if (index == 3) {
-            // Profile tab clicked
+          if (index == 1) {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ShopkeeperProfilePage(
-                  email: widget.email,
-                ),
+                builder: (context) => ShopkeeperProfilePage(email: widget.email),
               ),
             );
-          } else {
-            setState(() {
-              _selectedIndex = index;
-            });
           }
+          setState(() {
+            _selectedIndex = 0; // always stay on Home visually
+          });
         },
         selectedItemColor: Colors.orange,
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notice"),
-          BottomNavigationBarItem(icon: Icon(Icons.message), label: "Chat"),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
         ],
       ),
@@ -140,31 +136,44 @@ class _ShopkeeperHomePageState extends State<ShopkeeperHomePage> {
             mainAxisSpacing: 15,
             children: [
               menuTile(
-                Icons.store,
-                "Inventory",
-                Colors.teal,
-                () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(builder: (_) => const InventoryPage()),
-                  // );
-                },
-              ),
-              menuTile(Icons.payment, "Payments", Colors.deepOrange, () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Payments page is not ready yet")),
-                );
-              }),
-              menuTile(Icons.receipt, "Orders", Colors.indigo, () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Orders page is not ready yet")),
-                );
-              }),
-              menuTile(Icons.feedback, "Feedback", Colors.green, () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Feedback page is not ready yet")),
-                );
-              }),
+                  Icons.store,
+                  "Products",
+                  Colors.teal,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => InventoryPage(email: widget.email),
+                      ),
+                    );
+                  },
+                ),
+             menuTile(
+                  Icons.notifications,
+                  "Notice",
+                  Colors.deepOrange,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const User_NoticePage(),
+                      ),
+                    );
+                  },
+                ),
+             menuTile(
+                  Icons.report,
+                  "Report Post",
+                  Colors.redAccent,
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PostReportPage(email: widget.email),
+                      ),
+                    );
+                  },
+                ),
             ],
           ),
         ),
