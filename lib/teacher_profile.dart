@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:html' as html; // for web file upload
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -13,6 +14,7 @@ class TeacherProfilePage extends StatefulWidget {
 
 class _TeacherProfilePageState extends State<TeacherProfilePage> {
   late Future<Map<String, dynamic>> teacherData;
+  String? profileImageBase64;
 
   @override
   void initState() {
@@ -25,11 +27,55 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
     final url = Uri.parse('http://127.0.0.1:8000/teacher/$encodedEmail');
 
     final response = await http.get(url);
-
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+      profileImageBase64 = data['profile_image'];  // load existing image base64 string if any
+      return data;
     } else {
       throw Exception("Failed to load teacher profile");
+    }
+  }
+
+  void _uploadImage() {
+    html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
+    uploadInput.accept = 'image/*';
+    uploadInput.click();
+
+    uploadInput.onChange.listen((e) async {
+      final files = uploadInput.files;
+      if (files == null || files.isEmpty) return;
+
+      final reader = html.FileReader();
+      reader.readAsDataUrl(files[0]);
+
+      await reader.onLoad.first;
+      final encoded = reader.result as String;
+      final base64String = encoded.split(',').last;
+
+      await uploadImageToServer(base64String);
+    });
+  }
+
+  Future<void> uploadImageToServer(String base64Image) async {
+    final url = Uri.parse('http://127.0.0.1:8000/teacher/${Uri.encodeComponent(widget.email)}/upload-image');
+
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'image_base64': base64Image}),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        profileImageBase64 = base64Image;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile image uploaded successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to upload image')),
+      );
     }
   }
 
@@ -40,10 +86,7 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
         title: const Text("Logout"),
         content: const Text("Are you sure you want to logout?"),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -64,6 +107,13 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
         title: const Text("Teacher Profile"),
         centerTitle: true,
         backgroundColor: Colors.blue,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.camera_alt),
+            tooltip: "Upload Profile Picture",
+            onPressed: _uploadImage,
+          ),
+        ],
       ),
       backgroundColor: Colors.teal[50],
       body: FutureBuilder<Map<String, dynamic>>(
@@ -89,16 +139,18 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // প্রোফাইল ছবি রাখতে চাইলে এখানে যুক্ত করো
-                // const CircleAvatar(
-                //   radius: 60,
-                //   backgroundImage: AssetImage('assets/teacher_profile_pic.png'),
-                // ),
-                // const SizedBox(height: 20),
+                if (profileImageBase64 != null)
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundImage: MemoryImage(base64Decode(profileImageBase64!)),
+                  ),
+                // No avatar shown if no image uploaded
+
+                const SizedBox(height: 10),
 
                 Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                Text(email, style: const TextStyle(fontSize: 16, color: Colors.black)),
+                const SizedBox(height: 6),
+                Text(email, style: const TextStyle(fontSize: 16, color: Colors.black54)),
                 const SizedBox(height: 20),
                 const Divider(),
 

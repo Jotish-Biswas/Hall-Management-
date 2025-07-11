@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:html' as html; // Only for Flutter Web
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,32 +22,55 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
   }
 
   Future<Map<String, dynamic>> fetchShopkeeperProfile(String email) async {
-  print("Fetching shopkeeper profile for email: $email");
-  final encodedEmail = Uri.encodeComponent(email);
-  final url = Uri.parse('http://127.0.0.1:8000/shopkeeper/$encodedEmail');
-  print("Constructed URL: $url");
+    final encodedEmail = Uri.encodeComponent(email);
+    final url = Uri.parse('http://127.0.0.1:8000/shopkeeper/$encodedEmail');
 
-  final response = await http.get(url);
-  print("Response status code: ${response.statusCode}");
-  print("Response body: ${response.body}");
-
-  if (response.statusCode == 200) {
-    try {
-      final data = jsonDecode(response.body);
-      print("Parsed JSON data: $data");
-      return data;
-    } catch (e) {
-      print("JSON parsing error: $e");
-      throw Exception('Failed to parse profile data');
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load shopkeeper profile');
     }
-  } else if (response.statusCode == 404) {
-    print("Shopkeeper not found for email: $email");
-    throw Exception('Shopkeeper not found');
-  } else {
-    print("Server error with status: ${response.statusCode}");
-    throw Exception('Server error: ${response.statusCode}');
   }
-}
+
+  Future<void> _uploadImage() async {
+    final uploadInput = html.FileUploadInputElement();
+    uploadInput.accept = 'image/*';
+    uploadInput.click();
+
+    uploadInput.onChange.listen((event) async {
+      final file = uploadInput.files?.first;
+      if (file != null) {
+        final reader = html.FileReader();
+        reader.readAsDataUrl(file);
+
+        await reader.onLoad.first;
+        final encodedImage = reader.result.toString().split(',').last;
+
+        final url = Uri.parse(
+            'http://127.0.0.1:8000/shopkeeper/${Uri.encodeComponent(widget.email)}/upload-image');
+
+        final response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'image_base64': encodedImage}),
+        );
+
+        if (response.statusCode == 200) {
+          setState(() {
+            shopkeeperData = fetchShopkeeperProfile(widget.email);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile picture updated!')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to upload image')),
+          );
+        }
+      }
+    });
+  }
 
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
@@ -64,7 +88,7 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
               Navigator.pop(context);
               Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Logout"),
           ),
         ],
@@ -75,21 +99,21 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text("Shopkeeper Profile"),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.deepOrange,
       ),
-      backgroundColor: Colors.blue[50],
       body: FutureBuilder<Map<String, dynamic>>(
         future: shopkeeperData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text("Error: ${snapshot.error}"));
           } else if (!snapshot.hasData) {
-            return const Center(child: Text('No profile data found.'));
+            return const Center(child: Text("No profile data found."));
           }
 
           final data = snapshot.data!;
@@ -97,46 +121,71 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
           final email = data['email'] ?? 'No Email';
           final phone = data['phone'] ?? 'No Phone';
           final shopName = data['shop_name'] ?? 'No Shop Name';
+          final profileImage = data['profile_image'];
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                // Uncomment below to add profile image
-                // const CircleAvatar(
-                //   radius: 60,
-                //   backgroundImage: AssetImage('assets/shopkeeper_profile_pic.png'),
-                // ),
-                // const SizedBox(height: 20),
-
-                Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                Text(email, style: const TextStyle(fontSize: 16, color: Colors.black)),
-                const SizedBox(height: 20),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.phone, color: Colors.blue),
-                  title: const Text("Phone"),
-                  subtitle: Text(phone),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.store, color: Colors.blue),
-                  title: const Text("Shop Name"),
-                  subtitle: Text(shopName),
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.logout),
-                  label: const Text("Logout"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 70,
+                        backgroundColor: Colors.white,
+                        backgroundImage: profileImage != null
+                            ? MemoryImage(base64Decode(profileImage))
+                            : null,
+                        child: profileImage == null
+                            ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: IconButton(
+                          onPressed: _uploadImage,
+                          icon: const Icon(Icons.camera_alt, color: Colors.deepOrange),
+                          tooltip: 'Upload Profile Picture',
+                        ),
+                      )
+                    ],
                   ),
-                  onPressed: () => _showLogoutConfirmation(context),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(email, style: const TextStyle(fontSize: 16, color: Colors.grey)),
+                  const Divider(height: 30, thickness: 1.5),
+                  Card(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 2,
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.phone, color: Colors.deepOrange),
+                          title: Text("Phone: $phone"),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.store, color: Colors.deepOrange),
+                          title: Text("Shop Name: $shopName"),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () => _showLogoutConfirmation(context),
+                    icon: const Icon(Icons.logout),
+                    label: const Text("Logout"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepOrange,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
