@@ -65,6 +65,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.2"
+<<<<<<< HEAD
   ffi:
     dependency: transitive
     description:
@@ -81,6 +82,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+=======
+>>>>>>> 8391ec11ff712ed4719e172de1fdc68ddbea5be4
   file_selector_linux:
     dependency: transitive
     description:
