@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class TeacherUserListPage extends StatefulWidget {
-  const TeacherUserListPage({super.key});
+  final String hallname;  // <-- Add hallname here
+
+  const TeacherUserListPage({super.key, required this.hallname});
 
   @override
   State<TeacherUserListPage> createState() => _TeacherUserListPageState();
@@ -49,8 +51,9 @@ class _TeacherUserListPageState extends State<TeacherUserListPage>
   Future<void> fetchUsers() async {
     setState(() => isLoading = true);
     try {
+      // Include hall_name in query params
       final uri = Uri.parse(
-        'http://127.0.0.1:8000/users/teacher/users?role=$currentRole&search=$searchQuery',
+        'http://127.0.0.1:8000/users/teacher/users?role=$currentRole&hall_name=${Uri.encodeComponent(widget.hallname)}&search=${Uri.encodeComponent(searchQuery)}',
       );
 
       final response = await http.get(uri);
@@ -73,7 +76,7 @@ class _TeacherUserListPageState extends State<TeacherUserListPage>
   Future<void> deleteUser(String email) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/users/teacher/users/delete'), // ❗️correct route
+        Uri.parse('http://127.0.0.1:8000/users/teacher/users/delete'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
@@ -85,7 +88,7 @@ class _TeacherUserListPageState extends State<TeacherUserListPage>
         fetchUsers();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Delete failed: ${response.body}")), // Show backend error
+          SnackBar(content: Text("Delete failed: ${response.body}")),
         );
       }
     } catch (e) {
@@ -188,9 +191,7 @@ class _TeacherUserListPageState extends State<TeacherUserListPage>
                 backgroundImage: user['image_url'] != null
                     ? NetworkImage(user['image_url'])
                     : null,
-                child: user['image_url'] == null
-                    ? const Icon(Icons.person)
-                    : null,
+                child: user['image_url'] == null ? const Icon(Icons.person) : null,
               ),
               title: Text(user['full_name']),
               subtitle: Text(user['email']),

@@ -3,7 +3,7 @@ import 'student_home.dart';
 import 'teacher_home.dart';
 import 'shopkeeper_home.dart';
 import 'Admin_home.dart';
-import 'waiting_approval_page.dart'; // Page for unapproved teachers
+import 'waiting_approval_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'forgot_password_page.dart';
@@ -94,13 +94,19 @@ class _LoginPageState extends State<LoginPage> {
 
             const SizedBox(height: 20),
 
-            // Sign Up & Forgot Password
+            // Sign Up, Create Hall & Forgot Password
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 TextButton(
                   onPressed: () => Navigator.pushNamed(context, '/signup'),
                   child: const Text('Sign Up', style: TextStyle(color: Colors.blue)),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/create_hall');
+                  },
+                  child: const Text('Create New Hall', style: TextStyle(color: Colors.blue)),
                 ),
                 TextButton(
                   onPressed: () => Navigator.push(
@@ -120,6 +126,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
   bool _obscurePassword = true;
 
   Widget _buildTextField(String label, TextEditingController controller,
@@ -149,7 +156,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-
   void _login() async {
     String email = emailController.text.trim();
     String password = passwordController.text;
@@ -172,47 +178,80 @@ class _LoginPageState extends State<LoginPage> {
         }),
       );
 
+      // Handle all responses
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        String name = data["name"];
-
-        // Handle role-based redirection
-        if (selectedRole == 'Student') {
-          if (data.containsKey("approved") && data["approved"] == false) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)));
-          }else {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(
-                    builder: (_) => StudentHomePage(name: name, email: email)));
-          }
-        } else if (selectedRole == 'Teacher') {
-          if (data.containsKey("approved") && data["approved"] == false) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)));
-          } else {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => TeacherHomepage(name: name, email: email)));
-          }
-        } else if (selectedRole == 'Shopkeeper') {
-          if (data.containsKey("approved") && data["approved"] == false) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)));
-          }else {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) =>
-                    ShopkeeperHomePage(name: name, email: email)));
-          }
-        } else if (selectedRole == 'Admin') {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (_) => AdminHomePage(name: name, email: email)));
-        }
+        // Approved user - go to home page
+        _handleSuccessfulLogin(response.body, email);
+      } else if (response.statusCode == 403) {
+        // Unapproved user - go to waiting page
+        _handleUnapprovedUser(response.body);
       } else {
-        final error = jsonDecode(response.body);
-        _showMessage("Login failed: ${error['detail']}");
+        // Other errors (404, 401, etc.)
+        _handleErrorResponse(response.body);
       }
     } catch (e) {
-      _showMessage("Error: $e");
+      _showMessage("Network error: ${e.toString()}");
+    }
+  }
+
+  void _handleSuccessfulLogin(String responseBody, String email) {
+    final data = jsonDecode(responseBody);
+    String name = data["name"];
+    String hallName = data["hall_name"] ?? "Unknown Hall";
+
+    // Navigate based on role
+    switch (selectedRole) {
+      case 'Student':
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => StudentHomePage(name: name, email: email, hallname: hallName),
+          ),
+        );
+        break;
+      case 'Teacher':
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TeacherHomepage(name: name, email: email, hallname: hallName),
+          ),
+        );
+        break;
+      case 'Shopkeeper':
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ShopkeeperHomePage(name: name, email: email, hallname: hallName),
+          ),
+        );
+        break;
+      case 'Admin':
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AdminHomePage(name: name, email: email, hallname: hallName),
+          ),
+        );
+        break;
+    }
+  }
+
+  void _handleUnapprovedUser(String responseBody) {
+    final data = jsonDecode(responseBody);
+    String name = data["name"] ?? emailController.text.split('@').first;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)),
+    );
+  }
+
+  void _handleErrorResponse(String responseBody) {
+    try {
+      final errorData = jsonDecode(responseBody);
+      _showMessage("Login failed: ${errorData['detail']}");
+    } catch (e) {
+      _showMessage("Login failed: Unknown error");
     }
   }
 

@@ -5,8 +5,9 @@ import 'package:http/http.dart' as http;
 
 class ChatPage extends StatefulWidget {
   final String studentEmail;
+  final String hallName; // Add hall name parameter
 
-  const ChatPage({super.key, required this.studentEmail});
+  const ChatPage({super.key, required this.studentEmail, required this.hallName});
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -16,6 +17,7 @@ class _ChatPageState extends State<ChatPage> {
   List<dynamic> messages = [];
   final TextEditingController _controller = TextEditingController();
   final String baseUrl = "http://127.0.0.1:8000";
+  final ScrollController _scrollController = ScrollController();
 
   Timer? _timer;
 
@@ -23,7 +25,7 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     fetchMessages();
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
       fetchMessages();
     });
   }
@@ -31,15 +33,29 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void dispose() {
     _timer?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> fetchMessages() async {
     try {
-      final response = await http.get(Uri.parse("$baseUrl/chat/messages"));
+      final response = await http.get(
+          Uri.parse("$baseUrl/chat/messages?hall_name=${Uri.encodeComponent(widget.hallName)}")
+      );
+
       if (response.statusCode == 200) {
         setState(() {
           messages = json.decode(response.body);
+        });
+        // Scroll to bottom when new messages arrive
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+          }
         });
       }
     } catch (e) {
@@ -59,6 +75,7 @@ class _ChatPageState extends State<ChatPage> {
         body: json.encode({
           "student_email": widget.studentEmail,
           "message": msg,
+          "hall_name": widget.hallName, // Add hall name
         }),
       );
 
@@ -73,60 +90,181 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // Helper to extract username from email
   String _getUsername(String email) {
     return email.split('@').first;
   }
 
-  // Format timestamp for display
   String _formatTimestamp(String timestamp) {
     try {
-      final dateTime = DateTime.parse(timestamp);
+      final dateTime = DateTime.parse(timestamp).toLocal();
       return "${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}";
     } catch (e) {
-      return timestamp.length > 16 ? timestamp.substring(11, 16) : timestamp;
+      return "now";
     }
+  }
+
+  bool _isCurrentUser(String email) {
+    return email == widget.studentEmail;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Community Chat")),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              reverse: false,
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                return ListTile(
-                  title: Text(_getUsername(msg["student_email"])),
-                  subtitle: Text(msg["message"]),
-                  trailing: Text(_formatTimestamp(msg["timestamp"])),
-                );
-              },
-            ),
+      appBar: AppBar(
+        title: Text("${widget.hallName} Chat"),
+        backgroundColor: Colors.blueGrey[800],
+        elevation: 0,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.blueGrey[800]!,
+              Colors.blueGrey[900]!,
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(hintText: "Write message..."),
-                    onSubmitted: (_) => sendMessage(),
-                  ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: messages.isEmpty
+                  ? const Center(
+                child: Text(
+                  "Start the conversation!",
+                  style: TextStyle(color: Colors.white70),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: sendMessage,
-                )
-              ],
+              )
+                  : ListView.builder(
+                controller: _scrollController,
+                reverse: false,
+                itemCount: messages.length,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                itemBuilder: (context, index) {
+                  final msg = messages[index];
+                  final isMe = _isCurrentUser(msg["student_email"]);
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                      children: [
+                        if (!isMe)
+                          CircleAvatar(
+                            backgroundColor: Colors.tealAccent[700],
+                            radius: 18,
+                            child: Text(
+                              _getUsername(msg["student_email"])[0].toUpperCase(),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        Flexible(
+                          child: Container(
+                            margin: EdgeInsets.only(
+                              left: isMe ? 60 : 8,
+                              right: isMe ? 8 : 60,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: isMe ? Colors.tealAccent[700] : Colors.grey[800],
+                              borderRadius: BorderRadius.only(
+                                topLeft: const Radius.circular(18),
+                                topRight: const Radius.circular(18),
+                                bottomLeft: isMe
+                                    ? const Radius.circular(18)
+                                    : const Radius.circular(4),
+                                bottomRight: isMe
+                                    ? const Radius.circular(4)
+                                    : const Radius.circular(18),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                              children: [
+                                if (!isMe)
+                                  Text(
+                                    _getUsername(msg["student_email"]),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: isMe ? Colors.black87 : Colors.tealAccent[400],
+                                    ),
+                                  ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  msg["message"],
+                                  style: TextStyle(
+                                    color: isMe ? Colors.black : Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _formatTimestamp(msg["timestamp"]),
+                                  style: TextStyle(
+                                    color: isMe ? Colors.black54 : Colors.white54,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (isMe)
+                          CircleAvatar(
+                            backgroundColor: Colors.tealAccent[700],
+                            radius: 18,
+                            child: Text(
+                              _getUsername(msg["student_email"])[0].toUpperCase(),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          )
-        ],
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              color: Colors.blueGrey[900],
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.blueGrey[700],
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: TextField(
+                          controller: _controller,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            hintText: "Type your message...",
+                            hintStyle: TextStyle(color: Colors.white54),
+                            border: InputBorder.none,
+                          ),
+                          onSubmitted: (_) => sendMessage(),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  CircleAvatar(
+                    backgroundColor: Colors.tealAccent[700],
+                    radius: 24,
+                    child: IconButton(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      onPressed: sendMessage,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

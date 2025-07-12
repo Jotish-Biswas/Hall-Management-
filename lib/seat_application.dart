@@ -4,10 +4,12 @@ import 'package:http/http.dart' as http;
 
 class SeatApplication extends StatefulWidget {
   final String studentEmail;
+  final String hallname; // Received from previous screen
 
   const SeatApplication({
     super.key,
     required this.studentEmail,
+    required this.hallname
   });
 
   @override
@@ -21,17 +23,23 @@ class _SeatApplicationState extends State<SeatApplication> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Hall form")),
+      appBar: AppBar(title: const Text("Hall Seat Application")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Text(
+              "Applying for seat in: ${widget.hallname}",
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
             TextField(
               controller: reasonController,
               decoration: const InputDecoration(
-                labelText: 'Reason of application',
+                labelText: 'Reason for application',
                 border: OutlineInputBorder(),
-                hintText: 'Seat needed',
+                hintText: 'Explain why you need a seat...',
               ),
               maxLines: 3,
             ),
@@ -40,7 +48,7 @@ class _SeatApplicationState extends State<SeatApplication> {
               onPressed: isLoading ? null : applyForSeat,
               child: isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text("Submit"),
+                  : const Text("Submit Application"),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
               ),
@@ -52,7 +60,7 @@ class _SeatApplicationState extends State<SeatApplication> {
   }
 
   Future<void> applyForSeat() async {
-    const url = 'http://127.0.0.1:8000/api/seat/apply-for-seat'; // Added prefix
+    const url = 'http://127.0.0.1:8000/api/seat/apply-for-seat';
 
     setState(() => isLoading = true);
 
@@ -62,26 +70,29 @@ class _SeatApplicationState extends State<SeatApplication> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "student_email": widget.studentEmail,
+          "hall_name": widget.hallname, // Pass hallname to backend
           "reason": reasonController.text.isNotEmpty
               ? reasonController.text
-              : "Seat needed",
+              : "I need accommodation",
         }),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+      final responseBody = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(responseData['message'] ?? "Apply succesfull")),
+          SnackBar(content: Text(responseBody['message'])),
         );
+        // Close application screen after successful submission
+        Navigator.pop(context);
       } else {
-        final error = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error['detail'] ?? "error: ${response.body}")),
+          SnackBar(content: Text(responseBody['detail'] ?? "Application failed")),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("server not found: ${e.toString()}")),
+        SnackBar(content: Text("Connection error: ${e.toString()}")),
       );
     } finally {
       setState(() => isLoading = false);

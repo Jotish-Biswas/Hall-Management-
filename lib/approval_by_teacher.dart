@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class TeacherApprovalPage extends StatefulWidget {
-  const TeacherApprovalPage({super.key});
+  final String hallName; // Add hallName parameter
+  const TeacherApprovalPage({super.key, required this.hallName});
 
   @override
   State<TeacherApprovalPage> createState() => _TeacherApprovalPageState();
@@ -33,7 +34,10 @@ class _TeacherApprovalPageState extends State<TeacherApprovalPage> with SingleTi
 
   Future<void> fetchByRole(String role) async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:8000/teachers/unapproved/forteacher?role=$role'));
+      final response = await http.get(Uri.parse(
+          'http://127.0.0.1:8000/teachers/unapproved/forteacher?role=$role&hall_name=${widget.hallName}'
+      ));
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final users = List<Map<String, dynamic>>.from(data['users']);
@@ -48,35 +52,49 @@ class _TeacherApprovalPageState extends State<TeacherApprovalPage> with SingleTi
     }
   }
 
-  Future<void> approve(String email) async {
+  Future<void> approve(String email, String role) async {
     final response = await http.post(
       Uri.parse('http://127.0.0.1:8000/teachers/approve'),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email}),
+      body: jsonEncode({
+        "email": email,
+        "hall_name": widget.hallName, // Pass hall name
+        "role": role // Pass role for backend verification
+      }),
     );
 
     if (response.statusCode == 200) {
-      print(response.body);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Approved $email")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Approved $email"))
+      );
       fetchUsers();
     } else {
-      print(response.body);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Approval failed for $email")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Approval failed: ${response.body}"))
+      );
     }
   }
 
-  Future<void> decline(String email) async {
+  Future<void> decline(String email, String role) async {
     final response = await http.delete(
       Uri.parse('http://127.0.0.1:8000/teachers/decline'),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"email": email}),
+      body: jsonEncode({
+        "email": email,
+        "hall_name": widget.hallName, // Pass hall name
+        "role": role // Pass role for backend verification
+      }),
     );
 
     if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Declined $email")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Declined $email"))
+      );
       fetchUsers();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Decline failed for $email")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Decline failed: ${response.body}"))
+      );
     }
   }
 
@@ -90,6 +108,9 @@ class _TeacherApprovalPageState extends State<TeacherApprovalPage> with SingleTi
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Email: ${user['email']}"),
+            Text("Role: $role"),
+            Text("Hall: ${user['hall_name'] ?? widget.hallName}"),
+            const SizedBox(height: 8),
             if (role == "Student") ...[
               Text("Department: ${extra['department'] ?? 'N/A'}"),
               Text("Session: ${extra['session'] ?? 'N/A'}"),
@@ -103,13 +124,13 @@ class _TeacherApprovalPageState extends State<TeacherApprovalPage> with SingleTi
           mainAxisSize: MainAxisSize.min,
           children: [
             ElevatedButton(
-              onPressed: () => approve(user['email']),
+              onPressed: () => approve(user['email'], role),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               child: const Text("Approve"),
             ),
             const SizedBox(width: 8),
             ElevatedButton(
-              onPressed: () => decline(user['email']),
+              onPressed: () => decline(user['email'], role),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text("Decline"),
             ),
@@ -123,7 +144,7 @@ class _TeacherApprovalPageState extends State<TeacherApprovalPage> with SingleTi
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Approve Students & Shopkeepers"),
+        title: Text("Approve Users in ${widget.hallName}"),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -137,8 +158,17 @@ class _TeacherApprovalPageState extends State<TeacherApprovalPage> with SingleTi
           : TabBarView(
         controller: _tabController,
         children: [
-          ListView(children: unapprovedStudents.map((u) => userCard(u, "Student")).toList()),
-          ListView(children: unapprovedShopkeepers.map((u) => userCard(u, "Shopkeeper")).toList()),
+          // Show message if no students
+          if (unapprovedStudents.isEmpty)
+            const Center(child: Text("No pending student applications"))
+          else
+            ListView(children: unapprovedStudents.map((u) => userCard(u, "Student")).toList()),
+
+          // Show message if no shopkeepers
+          if (unapprovedShopkeepers.isEmpty)
+            const Center(child: Text("No pending shopkeeper applications"))
+          else
+            ListView(children: unapprovedShopkeepers.map((u) => userCard(u, "Shopkeeper")).toList()),
         ],
       ),
     );

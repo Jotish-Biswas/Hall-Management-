@@ -3,14 +3,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'notice_detail_page.dart';
 import 'notice_page.dart';
+
+
 class User_NoticePage extends StatefulWidget {
-  const User_NoticePage({super.key});
+  final String hallname;
+  const User_NoticePage({super.key, required this.hallname});
 
   @override
-  State<User_NoticePage> createState() => User_NoticePageState();
+  State<User_NoticePage> createState() => _User_NoticePageState();
 }
 
-class User_NoticePageState extends State<User_NoticePage> {
+class _User_NoticePageState extends State<User_NoticePage> {
   List<Notice> _allNotices = [];
   List<Notice> _filteredNotices = [];
   bool _isLoading = true;
@@ -34,20 +37,33 @@ class User_NoticePageState extends State<User_NoticePage> {
 
   Future<void> fetchNotices() async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:8000/notices'));
+      final url = Uri.parse('http://127.0.0.1:8000/notices?hall_name=${Uri.encodeComponent(widget.hallname)}');
+      final response = await http.get(url);
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        _allNotices = data.map((json) => Notice.fromJson(json)).toList();
-        _filteredNotices = List.from(_allNotices);
+        setState(() {
+          _allNotices = data.map((json) => Notice.fromJson(json)).toList();
+          _filteredNotices = List.from(_allNotices);
+          _isLoading = false;
+        });
+      } else if (response.statusCode == 400) {
+        setState(() {
+          _errorMessage = 'No hall specified';
+          _isLoading = false;
+        });
       } else {
-        _errorMessage = 'Failed to load notices: ${response.statusCode}';
+        setState(() {
+          _errorMessage = 'Failed to load notices: ${response.statusCode}';
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      _errorMessage = 'Error: $e';
+      setState(() {
+        _errorMessage = 'Error: $e';
+        _isLoading = false;
+      });
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _filterNotices() {
@@ -63,24 +79,6 @@ class User_NoticePageState extends State<User_NoticePage> {
         }).toList();
       }
     });
-  }
-
-  Future<void> deleteNotice(String noticeId) async {
-    final url = Uri.parse('http://127.0.0.1:8000/notices/$noticeId');
-    final response = await http.delete(url);
-    if (response.statusCode == 200) {
-      setState(() {
-        _allNotices.removeWhere((notice) => notice.id == noticeId);
-        _filteredNotices.removeWhere((notice) => notice.id == noticeId);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notice deleted successfully')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete notice: ${response.body}')),
-      );
-    }
   }
 
   void _startSearch() {
@@ -122,7 +120,7 @@ class User_NoticePageState extends State<User_NoticePage> {
         ),
       );
     } else {
-      return const Text('Notice Board');
+      return Text('Notices - ${widget.hallname}');
     }
   }
 
@@ -154,67 +152,38 @@ class User_NoticePageState extends State<User_NoticePage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
+          : (_errorMessage.isNotEmpty
           ? Center(child: Text(_errorMessage))
-          : _filteredNotices.isEmpty
-          ? const Center(child: Text("No notices found"))
+          : (_filteredNotices.isEmpty
+          ? const Center(
+        child: Text("No notices found in your hall"),
+      )
           : ListView.builder(
         itemCount: _filteredNotices.length,
         itemBuilder: (context, index) {
-          final notice1 = _filteredNotices[index];
+          final notice = _filteredNotices[index];
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: ListTile(
-              title: Text(notice1.title,
+              title: Text(notice.title,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(
-                "Posted: ${notice1.timestamp.toLocal().toString().split(' ')[0]}",
+                "Posted: ${notice.timestamp.toLocal().toString().split(' ')[0]}",
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // IconButton(
-                  //   icon: const Icon(Icons.delete, color: Colors.red),
-                  //   onPressed: () async {
-                  //     final confirmed = await showDialog<bool>(
-                  //       context: context,
-                  //       builder: (context) => AlertDialog(
-                  //         title: const Text('Confirm Delete'),
-                  //         content: const Text('Are you sure you want to delete this notice?'),
-                  //         actions: [
-                  //           TextButton(
-                  //             child: const Text('Cancel'),
-                  //             onPressed: () => Navigator.pop(context, false),
-                  //           ),
-                  //           TextButton(
-                  //             child: const Text('Delete'),
-                  //             onPressed: () => Navigator.pop(context, true),
-                  //           ),
-                  //         ],
-                  //       ),
-                  //     );
-                  //
-                  //     if (confirmed ?? false) {
-                  //       await deleteNotice(notice1.id);
-                  //     }
-                  //   },
-                  // ),
-                  const Icon(Icons.arrow_forward_ios, size: 14),
-                ],
-              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => NoticeDetailPage(notice: notice1),
+                    builder: (_) => NoticeDetailPage(notice: notice), // FIXED HERE
                   ),
                 );
               },
             ),
           );
         },
-      ),
+      ))),
     );
   }
 }

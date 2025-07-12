@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'welcome_page.dart'; // Ensure this file defines the UserDetails class
+import 'welcome_page.dart';
 import 'student_home.dart';
 import 'teacher_home.dart';
 import 'shopkeeper_home.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'waiting_approval_page.dart';
-
-
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -28,7 +26,8 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController field6Controller = TextEditingController();
   final TextEditingController field7Controller = TextEditingController(); // Email
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController(); // Confirm Password
+  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController hallNameController = TextEditingController(); // Hall Name
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +83,8 @@ class _SignUpPageState extends State<SignUpPage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    _buildTextField('Hall Name', hallNameController),
+                    const SizedBox(height: 10),
                     ..._buildFieldsForRole(),
                     _buildTextField('Password', passwordController, obscureText: true),
                     _buildTextField('Confirm Password', confirmPasswordController, obscureText: true),
@@ -195,6 +196,7 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
     );
   }
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -239,7 +241,6 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-
   void _clearFields() {
     field1Controller.clear();
     field2Controller.clear();
@@ -250,6 +251,7 @@ class _SignUpPageState extends State<SignUpPage> {
     field7Controller.clear();
     passwordController.clear();
     confirmPasswordController.clear();
+    hallNameController.clear();
   }
 
   void _showMessage(String message) {
@@ -265,15 +267,16 @@ class _SignUpPageState extends State<SignUpPage> {
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to register: ${response.body}');
-      throw Exception('Failed to register: ${response.body}');
     }
   }
 
   void _register() async {
-    final email    = field7Controller.text.trim();
+    final email = field7Controller.text.trim();
     final password = passwordController.text;
-    final confirm  = confirmPasswordController.text;
+    final confirm = confirmPasswordController.text;
     final fullName = field1Controller.text.trim();
+    final hallName = hallNameController.text.trim();
+
     // Simple client-side checks
     if (!email.contains('@') || !email.contains('.')) {
       return _showMessage('Please enter a valid email.');
@@ -296,6 +299,7 @@ class _SignUpPageState extends State<SignUpPage> {
       'full_name': fullName,
       'email': email,
       'password': password,
+      'hall_name': hallName,
       'role': selectedRole,
       'extra': {
         if (selectedRole == 'Student') ...{
@@ -345,5 +349,4 @@ class _SignUpPageState extends State<SignUpPage> {
       _showMessage(e.toString().replaceFirst('Exception: ', ''));
     }
   }
-
 }

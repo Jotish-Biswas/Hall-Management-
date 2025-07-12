@@ -5,11 +5,13 @@ import 'dart:convert';
 class StudentEventPage extends StatefulWidget {
   final String studentName;
   final String studentEmail;
+  final String hallName;
 
   const StudentEventPage({
     super.key,
     required this.studentName,
     required this.studentEmail,
+    required this.hallName,
   });
 
   @override
@@ -26,7 +28,8 @@ class _StudentEventPageState extends State<StudentEventPage> {
   }
 
   Future<void> fetchEvents() async {
-    final url = Uri.parse('http://127.0.0.1:8000/events');
+    final url = Uri.parse('http://127.0.0.1:8000/events?hall_name=${Uri.encodeComponent(widget.hallName)}');
+
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -34,7 +37,7 @@ class _StudentEventPageState extends State<StudentEventPage> {
           events = jsonDecode(response.body);
         });
       } else {
-        showError("Failed to load events.");
+        showError("Failed to load events: ${response.statusCode}");
       }
     } catch (e) {
       showError("Error fetching events: $e");
@@ -77,9 +80,12 @@ class _StudentEventPageState extends State<StudentEventPage> {
 
     if (reg == null || reg.isEmpty) return;
 
+    final baseUrl = 'http://127.0.0.1:8000/events/$eventId';
+    final queryParam = '?hall_name=${Uri.encodeComponent(widget.hallName)}';
+
     final url = Uri.parse(asVolunteer
-        ? 'http://127.0.0.1:8000/events/$eventId/interest'
-        : 'http://127.0.0.1:8000/events/$eventId/participate');
+        ? '$baseUrl/interest$queryParam'
+        : '$baseUrl/participate$queryParam'); // FIXED ENDPOINT
 
     final body = jsonEncode(asVolunteer
         ? {
@@ -102,15 +108,20 @@ class _StudentEventPageState extends State<StudentEventPage> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Participation successful!")),
+          const SnackBar(content: Text("Participation successful!")),
         );
-        fetchEvents(); // 🔁 Refresh event data
+        fetchEvents(); // Refresh event list
       } else {
-        final data = jsonDecode(response.body);
-        showError(data['detail'] ?? "Failed to participate.");
+        try {
+          final data = jsonDecode(response.body);
+          final errorDetail = data['detail'] ?? "Failed to participate";
+          showError(errorDetail);
+        } catch (e) {
+          showError("Failed to participate: ${response.body}");
+        }
       }
     } catch (e) {
-      showError("Error: $e");
+      showError("Connection error: $e");
     }
   }
 
@@ -132,7 +143,10 @@ class _StudentEventPageState extends State<StudentEventPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Events"), backgroundColor: Colors.blue),
+      appBar: AppBar(
+        title: Text("Events - ${widget.hallName}"),
+        backgroundColor: Colors.blue,
+      ),
       body: events.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
@@ -162,6 +176,10 @@ class _StudentEventPageState extends State<StudentEventPage> {
                     "Volunteers: $currVol / $maxVol",
                     style: const TextStyle(color: Colors.deepPurple),
                   ),
+                  Text(
+                    "Hall: ${event['hall_name']}",
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                   const SizedBox(height: 8),
                   Text(event['description'] ?? "No description",
                       style: const TextStyle(color: Colors.black87)),
@@ -176,15 +194,14 @@ class _StudentEventPageState extends State<StudentEventPage> {
                         icon: const Icon(Icons.group),
                         label: const Text("Participate"),
                         style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                            userJoined ? Colors.grey : Colors.white),
+                          backgroundColor: userJoined ? Colors.grey : Colors.white,
+                        ),
                       ),
                       isFull
                           ? const Text(
                         "No Volunteer Needed",
                         style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold),
+                            color: Colors.red, fontWeight: FontWeight.bold),
                       )
                           : ElevatedButton.icon(
                         onPressed: userJoined
@@ -193,9 +210,10 @@ class _StudentEventPageState extends State<StudentEventPage> {
                         icon: const Icon(Icons.volunteer_activism),
                         label: const Text("Volunteer"),
                         style: ElevatedButton.styleFrom(
-                            backgroundColor: userJoined
-                                ? Colors.grey
-                                : Colors.deepPurple[50]),
+                          backgroundColor: userJoined
+                              ? Colors.grey
+                              : Colors.deepPurple[50],
+                        ),
                       ),
                     ],
                   )

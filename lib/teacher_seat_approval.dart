@@ -4,8 +4,13 @@ import 'package:http/http.dart' as http;
 
 class ApprovalPage extends StatefulWidget {
   final String teacherEmail;
+  final String hallname;
 
-  const ApprovalPage({super.key, required this.teacherEmail});
+  const ApprovalPage({
+    super.key,
+    required this.teacherEmail,
+    required this.hallname
+  });
 
   @override
   State<ApprovalPage> createState() => _ApprovalPageState();
@@ -14,7 +19,7 @@ class ApprovalPage extends StatefulWidget {
 class _ApprovalPageState extends State<ApprovalPage> {
   List<Map<String, dynamic>> applications = [];
   bool isLoading = true;
-  final String baseUrl = "http://127.0.0.1:8000/api/seat"; // Added prefix
+  final String baseUrl = "http://127.0.0.1:8000/api/seat";
 
   @override
   void initState() {
@@ -24,7 +29,12 @@ class _ApprovalPageState extends State<ApprovalPage> {
 
   Future<void> fetchApplications() async {
     try {
-      final response = await http.get(Uri.parse("$baseUrl/get-all-applications"));
+      // Add hallname as query parameter
+      final uri = Uri.parse("$baseUrl/get-all-applications")
+          .replace(queryParameters: {"hall_name": widget.hallname});
+
+      final response = await http.get(uri);
+
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -37,7 +47,6 @@ class _ApprovalPageState extends State<ApprovalPage> {
     } catch (e) {
       setState(() => isLoading = false);
       print("❌ Error fetching applications: $e");
-      // Show error to user
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: ${e.toString()}")),
       );
@@ -52,10 +61,12 @@ class _ApprovalPageState extends State<ApprovalPage> {
         body: json.encode({
           "status": status,
           "processed_by": widget.teacherEmail,
+          "hall_name": widget.hallname, // Added hall_name
         }),
       );
 
       if (response.statusCode == 200) {
+        // Remove the application from the list
         setState(() {
           applications.removeWhere((app) => app["_id"] == id);
         });
@@ -63,13 +74,12 @@ class _ApprovalPageState extends State<ApprovalPage> {
           SnackBar(content: Text("✅ Application $status")),
         );
       } else {
-        print("❌ Failed to update status: ${response.body}");
+        final error = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to update: ${response.body}")),
+          SnackBar(content: Text("❌ ${error['detail']}")),
         );
       }
     } catch (e) {
-      print("❌ Exception while updating status: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: ${e.toString()}")),
       );
@@ -78,6 +88,7 @@ class _ApprovalPageState extends State<ApprovalPage> {
 
   Widget buildApplicationCard(Map<String, dynamic> app) {
     final student = app["student_info"] ?? {};
+    final hallName = app["hall_name"] ?? "Unknown Hall";
 
     return Card(
       elevation: 4,
@@ -88,6 +99,21 @@ class _ApprovalPageState extends State<ApprovalPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Display hall name
+            Row(
+              children: [
+                const Icon(Icons.house, size: 16, color: Colors.blue),
+                const SizedBox(width: 5),
+                Text(
+                  hallName,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             Text("📧 ${app["student_email"]}",
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
@@ -95,8 +121,6 @@ class _ApprovalPageState extends State<ApprovalPage> {
             Text("🎓 Roll: ${student["roll_no"] ?? "N/A"}"),
             Text("📚 Department: ${student["department"] ?? "N/A"}"),
             Text("🗓 Session: ${student["session"] ?? "N/A"}"),
-            Text("📝 Registration No: ${student["registration_no"] ?? "N/A"}"),
-            Text("🎂 DOB: ${student["dob"] ?? "N/A"}"),
             const SizedBox(height: 8),
             Text("📝 Reason: ${app["reason"] ?? ""}"),
             const SizedBox(height: 12),
@@ -107,14 +131,20 @@ class _ApprovalPageState extends State<ApprovalPage> {
                   onPressed: () => updateApplicationStatus(app["_id"], "approved"),
                   icon: const Icon(Icons.check),
                   label: const Text("Approve"),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white
+                  ),
                 ),
                 const SizedBox(width: 10),
                 ElevatedButton.icon(
                   onPressed: () => updateApplicationStatus(app["_id"], "declined"),
                   icon: const Icon(Icons.close),
                   label: const Text("Decline"),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white
+                  ),
                 ),
               ],
             )
@@ -128,16 +158,28 @@ class _ApprovalPageState extends State<ApprovalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Seat Approval Requests"),
+        title: Text("Seat Approvals - ${widget.hallname}"),
         backgroundColor: Colors.teal,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : applications.isEmpty
-          ? const Center(child: Text("🎉 No pending applications"))
-          : ListView.builder(
-        itemCount: applications.length,
-        itemBuilder: (context, index) => buildApplicationCard(applications[index]),
+          ? const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.check_circle, size: 64, color: Colors.green),
+            SizedBox(height: 16),
+            Text("No pending applications", style: TextStyle(fontSize: 18)),
+          ],
+        ),
+      )
+          : RefreshIndicator(
+        onRefresh: fetchApplications,
+        child: ListView.builder(
+          itemCount: applications.length,
+          itemBuilder: (context, index) => buildApplicationCard(applications[index]),
+        ),
       ),
     );
   }

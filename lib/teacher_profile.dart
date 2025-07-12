@@ -5,8 +5,9 @@ import 'package:http/http.dart' as http;
 
 class TeacherProfilePage extends StatefulWidget {
   final String email;
+  final String hallname;
 
-  const TeacherProfilePage({super.key, required this.email});
+  const TeacherProfilePage({super.key, required this.email, required this.hallname});
 
   @override
   State<TeacherProfilePage> createState() => _TeacherProfilePageState();
@@ -29,7 +30,7 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
     final response = await http.get(url);
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      profileImageBase64 = data['profile_image'];  // load existing image base64 string if any
+      profileImageBase64 = data['profile_image'];
       return data;
     } else {
       throw Exception("Failed to load teacher profile");
@@ -134,6 +135,7 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
           final dept = data['department'] ?? 'N/A';
           final phone = data['phone'] ?? 'N/A';
           final address = data['address'] ?? 'N/A';
+          final hall = data['hall_name'] ?? widget.hallname; // show hallname
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -144,7 +146,6 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
                     radius: 60,
                     backgroundImage: MemoryImage(base64Decode(profileImageBase64!)),
                   ),
-                // No avatar shown if no image uploaded
 
                 const SizedBox(height: 10),
 
@@ -173,6 +174,11 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
                   leading: const Icon(Icons.home, color: Colors.blue),
                   title: const Text("Address"),
                   subtitle: Text(address),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.location_city, color: Colors.blue),
+                  title: const Text("Hall Name"),
+                  subtitle: Text(hall), // ✅ Hall name shown here
                 ),
 
                 const SizedBox(height: 30),

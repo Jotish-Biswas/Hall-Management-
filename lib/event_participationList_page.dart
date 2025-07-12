@@ -3,7 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AdminEventParticipationPage extends StatefulWidget {
-  const AdminEventParticipationPage({super.key});
+  final String hallName;
+
+  const AdminEventParticipationPage({super.key, required this.hallName});
 
   @override
   State<AdminEventParticipationPage> createState() => _AdminEventParticipationPageState();
@@ -21,7 +23,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   }
 
   Future<void> fetchEvents() async {
-    final url = Uri.parse('http://127.0.0.1:8000/events');
+    final url = Uri.parse('http://127.0.0.1:8000/events?hall_name=${widget.hallName}');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -29,7 +31,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
           events = jsonDecode(response.body);
         });
       } else {
-        showError("Failed to load events");
+        showError("Failed to load events: ${response.statusCode}");
       }
     } catch (e) {
       showError("Error loading events: $e");
@@ -37,7 +39,8 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   }
 
   Future<void> fetchParticipants(String eventId) async {
-    final url = Uri.parse('http://127.0.0.1:8000/events/$eventId/interested');
+    // UPDATED: Use the new endpoint to get full event details
+    final url = Uri.parse('http://127.0.0.1:8000/events/$eventId?hall_name=${widget.hallName}');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -47,7 +50,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
           participationData = data;
         });
       } else {
-        showError("Failed to load participants");
+        showError("Failed to load participants: ${response.statusCode}");
       }
     } catch (e) {
       showError("Error loading participants: $e");
@@ -55,12 +58,12 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   }
 
   Future<void> _deleteEvent(String eventId) async {
-    final url = Uri.parse('http://127.0.0.1:8000/events/$eventId');
+    final url = Uri.parse('http://127.0.0.1:8000/events/$eventId?hall_name=${widget.hallName}');
     try {
       final response = await http.delete(url);
       if (response.statusCode == 200) {
         showMessage("Event deleted successfully");
-        await fetchEvents(); // Refresh list
+        await fetchEvents();
         setState(() {
           participationData = {};
           selectedEventId = '';
@@ -116,7 +119,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
         ),
         ...volunteers.map<Widget>((v) => ListTile(
           leading: const Icon(Icons.volunteer_activism, color: Colors.deepPurple),
-          title: Text(v['student_name']),
+          title: Text(v['student_name'] ?? 'Unknown'),
           subtitle: Text("Reg: ${v['registration']} | Email: ${v['student_email']}"),
         )),
         const SizedBox(height: 10),
@@ -126,7 +129,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
         ),
         ...general.map<Widget>((p) => ListTile(
           leading: const Icon(Icons.group, color: Colors.teal),
-          title: Text(p['name']),
+          title: Text(p['name'] ?? 'Unknown'),
           subtitle: Text("Reg: ${p['registration']} | Email: ${p['email']}"),
         )),
       ],
@@ -136,25 +139,48 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Event Participation"), backgroundColor: Colors.blueGrey),
+      appBar: AppBar(
+        title: Text("Event Participation - ${widget.hallName}"),
+        backgroundColor: Colors.blueGrey,
+      ),
       body: events.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : ListView(
         padding: const EdgeInsets.all(10),
         children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              "Events for ${widget.hallName}",
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueGrey,
+              ),
+            ),
+          ),
+
           ...events.map((event) {
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
               elevation: 4,
               child: ListTile(
                 title: Text(event['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("Date: ${event['date']} | Expire: ${event['expiry_date']}"),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Date: ${event['date']}"),
+                    Text("Expire: ${event['expiry_date']}"),
+                    Text("Hall: ${event['hall_name']}",
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
                 trailing: Wrap(
                   spacing: 8,
                   children: [
                     ElevatedButton(
                       onPressed: () => fetchParticipants(event['id']),
-                      child: const Text("See Participants"),
+                      child: const Text("Participants"),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),

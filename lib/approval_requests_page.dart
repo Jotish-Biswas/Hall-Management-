@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApprovalRequestsPage extends StatefulWidget {
-  const ApprovalRequestsPage({super.key});
+  final String hallname;
+  const ApprovalRequestsPage({super.key, required this.hallname});
 
   @override
   State<ApprovalRequestsPage> createState() => _ApprovalRequestsPageState();
@@ -27,16 +28,29 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
     setState(() => isLoading = true);
 
     try {
-      // Use new admin endpoint
-      final response = await http.get(Uri.parse('http://127.0.0.1:8000/admin/unapproved'));
+      // Correct endpoint with hall_name query parameter
+      final uri = Uri.parse(
+        'http://127.0.0.1:8000/admin/unapproved?hall_name=${Uri.encodeComponent(widget.hallname)}',
+      );
+
+      final response = await http.get(uri);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final List<dynamic> userList = data['users'];
 
         setState(() {
-          students = userList.where((u) => u['role'] == 'Student').map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
-          teachers = userList.where((u) => u['role'] == 'Teacher').map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
-          shopkeepers = userList.where((u) => u['role'] == 'Shopkeeper').map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+          students = userList
+              .where((u) => u['role'] == 'Student')
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+          teachers = userList
+              .where((u) => u['role'] == 'Teacher')
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+          shopkeepers = userList
+              .where((u) => u['role'] == 'Shopkeeper')
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
         });
       } else {
         print("Fetch failed: ${response.statusCode}");

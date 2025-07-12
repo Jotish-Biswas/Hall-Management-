@@ -3,7 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class AdminCreateEventPage extends StatefulWidget {
-  const AdminCreateEventPage({super.key});
+  final String hallName; // Add hallName parameter
+
+  const AdminCreateEventPage({super.key, required this.hallName});
 
   @override
   State<AdminCreateEventPage> createState() => _AdminCreateEventPageState();
@@ -65,11 +67,12 @@ class _AdminCreateEventPageState extends State<AdminCreateEventPage> {
       "title": title,
       "description": description,
       "date": eventDate,
-      "expiry_date": expiryDate,  // New expiry date field
+      "expiry_date": expiryDate,
+      "hall_name": widget.hallName, // Add hall_name from parameter
       "created_by": "admin@du.edu.bd", // Replace with real admin email if dynamic
       "max_volunteers": maxVolunteers,
       "interested_students": [],
-      "general_participants": [], // If backend supports this field
+      "general_participants": [],
     };
 
     try {
@@ -111,11 +114,26 @@ class _AdminCreateEventPageState extends State<AdminCreateEventPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView( // To prevent overflow if keyboard appears
+        child: SingleChildScrollView(
           child: Column(
             children: [
+              // Show hall name at the top
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  "Creating event for: ${widget.hallName}",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
               _buildTextField("Event Title", titleController),
               _buildTextField("Description", descriptionController, maxLines: 3),
+
               GestureDetector(
                 onTap: () => _pickDate(eventDateController),
                 child: AbsorbPointer(
@@ -129,7 +147,9 @@ class _AdminCreateEventPageState extends State<AdminCreateEventPage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
+
               GestureDetector(
                 onTap: () => _pickDate(expiryDateController),
                 child: AbsorbPointer(
@@ -143,10 +163,13 @@ class _AdminCreateEventPageState extends State<AdminCreateEventPage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 12),
               _buildTextField("Maximum Volunteers", maxVolunteersController,
                   keyboardType: TextInputType.number),
+
               const SizedBox(height: 20),
+
               ElevatedButton.icon(
                 onPressed: _submitEvent,
                 icon: const Icon(Icons.send),

@@ -8,12 +8,14 @@ class Notice {
   final String title;
   final String message;
   final DateTime timestamp;
+  final String hallName; // Added hall name
 
   Notice({
     required this.id,
     required this.title,
     required this.message,
     required this.timestamp,
+    required this.hallName, // Added
   });
 
   factory Notice.fromJson(Map<String, dynamic> json) {
@@ -21,13 +23,15 @@ class Notice {
       id: json['id'],
       title: json['title'],
       message: json['message'],
+      hallName: json['hall_name'] ?? 'JN_Hall', // Default value
       timestamp: DateTime.parse(json['timestamp']),
     );
   }
 }
 
 class NoticePage extends StatefulWidget {
-  const NoticePage({super.key});
+  final String hallname;
+  const NoticePage({super.key, required this.hallname});
 
   @override
   State<NoticePage> createState() => _NoticePageState();
@@ -57,20 +61,29 @@ class _NoticePageState extends State<NoticePage> {
 
   Future<void> fetchNotices() async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:8000/notices'));
+      // Pass hallname as query parameter
+      final url = Uri.parse('http://127.0.0.1:8000/notices?hall_name=${Uri.encodeComponent(widget.hallname)}');
+
+      final response = await http.get(url);
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        _allNotices = data.map((json) => Notice.fromJson(json)).toList();
-        _filteredNotices = List.from(_allNotices);
+        setState(() {
+          _allNotices = data.map((json) => Notice.fromJson(json)).toList();
+          _filteredNotices = List.from(_allNotices);
+          _isLoading = false;
+        });
       } else {
-        _errorMessage = 'Failed to load notices: ${response.statusCode}';
+        setState(() {
+          _errorMessage = 'Failed to load notices: ${response.statusCode}';
+          _isLoading = false;
+        });
       }
     } catch (e) {
-      _errorMessage = 'Error: $e';
+      setState(() {
+        _errorMessage = 'Error: $e';
+        _isLoading = false;
+      });
     }
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   void _filterNotices() {
@@ -145,7 +158,7 @@ class _NoticePageState extends State<NoticePage> {
         ),
       );
     } else {
-      return const Text('Notice Board');
+      return Text('Notice Board - ${widget.hallname}'); // Show hall name
     }
   }
 
@@ -184,15 +197,24 @@ class _NoticePageState extends State<NoticePage> {
           : ListView.builder(
         itemCount: _filteredNotices.length,
         itemBuilder: (context, index) {
-         final notice = _filteredNotices[index];
+          final notice = _filteredNotices[index];
           return Card(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: ListTile(
               title: Text(notice.title,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(
-                "Posted: ${notice.timestamp.toLocal().toString().split(' ')[0]}",
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Posted: ${notice.timestamp.toLocal().toString().split(' ')[0]}",
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  Text(
+                    "Hall: ${notice.hallName}",
+                    style: const TextStyle(fontSize: 12, color: Colors.blue),
+                  ),
+                ],
               ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,

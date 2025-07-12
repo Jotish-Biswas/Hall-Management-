@@ -6,10 +6,12 @@ import 'package:http/http.dart' as http;
 class StudentProfilePage extends StatefulWidget {
   final String email;
   final VoidCallback? onBack;
+  final String hallname;
 
   const StudentProfilePage({
     super.key,
     required this.email,
+    required this.hallname,
     this.onBack,
   });
 
@@ -136,6 +138,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           final session = data['session'] ?? 'N/A';
           final roll = data['roll'] ?? 'N/A';
           final profileImage = data['profile_image'];
+          final hall = data['hall_name'] ?? widget.hallname;
 
           return Padding(
             padding: const EdgeInsets.all(20),
@@ -187,6 +190,10 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                           ListTile(
                             leading: const Icon(Icons.badge, color: Colors.indigo),
                             title: Text("Roll No: $roll"),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.location_city, color: Colors.indigo),
+                            title: Text("Hall Name: $hall"),
                           ),
                         ],
                       ),

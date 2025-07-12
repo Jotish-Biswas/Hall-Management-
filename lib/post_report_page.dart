@@ -1,100 +1,143 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class PostReportPage extends StatefulWidget {
   final String email;
-  const PostReportPage({super.key, required this.email});
+  final String hallname;
+
+  const PostReportPage({
+    super.key,
+    required this.email,
+    required this.hallname,
+  });
 
   @override
   State<PostReportPage> createState() => _PostReportPageState();
 }
 
 class _PostReportPageState extends State<PostReportPage> {
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController messageController = TextEditingController();
-  bool isPosting = false;
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
+  bool _isSubmitting = false;
 
-  Future<void> postReport() async {
-    final title = titleController.text.trim();
-    final message = messageController.text.trim();
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
 
+  Future<void> _submitReport() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    if (title.isEmpty || message.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in both fields.")),
-      );
-      return;
-    }
-
-    setState(() => isPosting = true);
+    setState(() => _isSubmitting = true);
 
     try {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/reports/post"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email":widget.email, "title": title, "message": message}),
+        Uri.parse('http://127.0.0.1:8000/reports/post'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "email": widget.email,
+          "title": _titleController.text,
+          "message": _messageController.text,
+          "hall_name": widget.hallname,
+        }),
       );
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Report posted successfully")),
+          const SnackBar(content: Text('Report submitted successfully!')),
         );
-        titleController.clear();
-        messageController.clear();
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed: ${response.body}")),
+          SnackBar(content: Text('Failed to submit report: ${response.body}')),
         );
       }
     } catch (e) {
-      print("Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("An error occurred.")),
+        SnackBar(content: Text('Error: $e')),
       );
+    } finally {
+      setState(() => _isSubmitting = false);
     }
-
-    setState(() => isPosting = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Post Report "),
-        backgroundColor: Colors.blueGrey,
+        title: const Text("Post Report"),
+        backgroundColor: Colors.lightBlue,
+        foregroundColor: Colors.white,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: "Report Title",
-                border: OutlineInputBorder(),
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a title';
+                  }
+                  return null;
+                },
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: messageController,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: "Report Message",
-                border: OutlineInputBorder(),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  labelText: 'Message',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                maxLines: 5,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your report';
+                  }
+                  return null;
+                },
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: isPosting ? null : postReport,
-              icon: const Icon(Icons.send),
-              label: const Text("Post Notice"),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.blueGrey,
+              const SizedBox(height: 20),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _isSubmitting ? null : _submitReport,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.lightBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 15),
+                    ),
+                    child: _isSubmitting
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Submit Report',
+                        style: TextStyle(fontSize: 16)),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Hall: ${widget.hallname}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

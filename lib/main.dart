@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'signup_page.dart';
 import 'about_page.dart';
 import 'login.dart';
+import 'create_new_hall.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,7 +24,9 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginPage(), // Use LoginPage from login.dart
         '/about': (context) => const AboutUsPage(),
+        '/create_hall': (_) => const CreateHallPage(),
         '/signup': (context) => const SignUpPage(),
+
       },
     );
 

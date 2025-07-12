@@ -5,8 +5,9 @@ import 'package:http/http.dart' as http;
 
 class ShopkeeperProfilePage extends StatefulWidget {
   final String email;
+  final String hallname;
 
-  const ShopkeeperProfilePage({super.key, required this.email});
+  const ShopkeeperProfilePage({super.key, required this.email, required this.hallname});
 
   @override
   State<ShopkeeperProfilePage> createState() => _ShopkeeperProfilePageState();
@@ -122,6 +123,7 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
           final phone = data['phone'] ?? 'No Phone';
           final shopName = data['shop_name'] ?? 'No Shop Name';
           final profileImage = data['profile_image'];
+          final hall = data['hall_name'] ?? widget.hallname;
 
           return Padding(
             padding: const EdgeInsets.all(20),
@@ -168,6 +170,10 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
                         ListTile(
                           leading: const Icon(Icons.store, color: Colors.deepOrange),
                           title: Text("Shop Name: $shopName"),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.location_city, color: Colors.deepOrange),
+                          title: Text("Hall Name: $hall"),
                         ),
                       ],
                     ),

@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class UserListPage extends StatefulWidget {
-  final String userRole; // "admin", "teacher", etc.
+  final String userRole;
+  final String hallname; // Hall of the logged-in user
 
-  const UserListPage({super.key, required this.userRole});
+  const UserListPage({super.key, required this.userRole, required this.hallname});
 
   @override
   State<UserListPage> createState() => _UserListPageState();
@@ -61,8 +62,9 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
   Future<void> fetchUsers() async {
     setState(() => isLoading = true);
     try {
+      // Filter by hallname for both admin and teacher
       final uri = Uri.parse(
-        'http://127.0.0.1:8000/users?role=$currentRole&search=$searchQuery',
+        'http://127.0.0.1:8000/users/users_by_hall?role=$currentRole&hall_name=${Uri.encodeComponent(widget.hallname)}&search=${Uri.encodeComponent(searchQuery)}',
       );
 
       final response = await http.get(uri);
@@ -84,8 +86,12 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
 
   Future<void> deleteUser(String email) async {
     try {
+      final endpoint = widget.userRole.toLowerCase() == "teacher"
+          ? 'http://127.0.0.1:8000/users/teacher/users/delete'
+          : 'http://127.0.0.1:8000/users/delete';
+
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/users/delete'),
+        Uri.parse(endpoint),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
@@ -118,6 +124,7 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
   }
 
   Widget buildUserDetails(Map<String, dynamic> user) {
+    // Display hall_name in user details
     switch (currentRole) {
       case "Student":
         return Column(
@@ -125,6 +132,7 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
           children: [
             Text("Department: ${user['department'] ?? 'N/A'}"),
             Text("Session: ${user['session'] ?? 'N/A'}"),
+            Text("Hall: ${user['hall_name'] ?? 'N/A'}"),
             Text("Email: ${user['email']}"),
           ],
         );
@@ -133,12 +141,19 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text("Department: ${user['department'] ?? 'N/A'}"),
+            Text("Hall: ${user['hall_name'] ?? 'N/A'}"),
             Text("Email: ${user['email']}"),
           ],
         );
       case "Shopkeeper":
       default:
-        return Text("Email: ${user['email']}");
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Hall: ${user['hall_name'] ?? 'N/A'}"),
+            Text("Email: ${user['email']}"),
+          ],
+        );
     }
   }
 
@@ -194,9 +209,7 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: _tabController.index == index
-                        ? getTabColor(index)
-                        : Colors.white70,
+                    color: _tabController.index == index ? getTabColor(index) : Colors.white70,
                   ),
                 ),
               );

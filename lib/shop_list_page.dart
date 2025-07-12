@@ -1,47 +1,52 @@
 import 'package:flutter/material.dart';
-import 'shop_products_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'shop_products_page.dart';
 
 class ShopListPage extends StatefulWidget {
-  const ShopListPage({super.key});
+  final String hallname;
+
+  const ShopListPage({super.key, required this.hallname});
 
   @override
-  State<ShopListPage> createState() => _ShopListPageState();
+  _ShopListPageState createState() => _ShopListPageState();
 }
 
 class _ShopListPageState extends State<ShopListPage> {
-  List<dynamic> shops = [];
-  bool isLoading = true;
-  String? errorMessage;
+  List<dynamic> _shops = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    fetchShops();
+    _fetchShopkeepers();
   }
 
-  Future<void> fetchShops() async {
-    final url = Uri.parse('http://127.0.0.1:8000/shopkeepers/emails_with_shoptypes');
+  Future<void> _fetchShopkeepers() async {
     try {
+      final url = Uri.parse(
+          'http://127.0.0.1:8000/shopkeepers/emails_with_shoptypes?hall_name=${widget.hallname}'
+      );
+
       final response = await http.get(url);
+
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = json.decode(response.body);
         setState(() {
-          shops = data['shopkeepers'] ?? [];
-          isLoading = false;
-          errorMessage = null;
+          _shops = data['shopkeepers'];
+          _isLoading = false;
         });
       } else {
         setState(() {
-          errorMessage = 'Failed to fetch shops: ${response.statusCode}';
-          isLoading = false;
+          _error = 'Failed to load shops: ${response.statusCode}';
+          _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        errorMessage = 'Error fetching shops: $e';
-        isLoading = false;
+        _error = 'Connection error: $e';
+        _isLoading = false;
       });
     }
   }
@@ -49,78 +54,56 @@ class _ShopListPageState extends State<ShopListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey[50], // ✅ Soft background
       appBar: AppBar(
-        title: const Text("All Shops"),
-        backgroundColor: Colors.lightBlue, // ✅ AppBar color
-        foregroundColor: Colors.white,
-        centerTitle: true,
+        title: Text('${widget.hallname} Shops'),
       ),
-      body: isLoading
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : errorMessage != null
-              ? Center(child: Text(errorMessage!))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: shops.length,
-                  itemBuilder: (context, index) {
-                    final shop = shops[index];
-                    final shopName = shop['shop_type'] ?? 'Unknown Shop Name';
-                    final email = shop['email'] ?? 'No Email';
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 3,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () {
-                          if (email.isNotEmpty) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ShopProductsPage(
-                                  email: email,
-                                  shopName: shopName,
-                                ),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Invalid shop email')),
-                            );
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                shopName,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                email,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+          : _error != null
+          ? Center(child: Text(_error!))
+          : _shops.isEmpty
+          ? const Center(child: Text('No shops available in this hall'))
+          : ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _shops.length,
+        itemBuilder: (context, index) {
+          final shop = _shops[index];
+          return Card(
+            elevation: 3,
+            margin: const EdgeInsets.only(bottom: 16),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              leading: const Icon(Icons.store, size: 40, color: Colors.blue),
+              title: Text(
+                shop['shop_type'] ?? 'Shop',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Text('Owner: ${shop['full_name'] ?? 'Unknown'}'),
+                  Text('Email: ${shop['email']}'),
+                  Text('Phone: ${shop['phone'] ?? 'Not provided'}'),
+                ],
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                // Navigate to shop products page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ShopProductsPage(
+                      email: shop['email'] ?? '',
+                      shopName: shop['shop_type'] ?? 'Shop',
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }

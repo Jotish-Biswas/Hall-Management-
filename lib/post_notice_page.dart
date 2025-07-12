@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class PostNoticePage extends StatefulWidget {
-  const PostNoticePage({super.key});
+  final String hallname; // Add hallname parameter
+  const PostNoticePage({super.key, required this.hallname});
 
   @override
   State<PostNoticePage> createState() => _PostNoticePageState();
@@ -29,9 +30,13 @@ class _PostNoticePageState extends State<PostNoticePage> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/notices/post"),
+        Uri.parse("http://127.0.0.1:8000/notices/post"), // Keep endpoint
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"title": title, "message": message}),
+        body: jsonEncode({
+          "title": title,
+          "message": message,
+          "hall_name": widget.hallname, // Add hall_name from widget parameter
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -59,7 +64,7 @@ class _PostNoticePageState extends State<PostNoticePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Post Notice"),
+        title: Text("Post Notice - ${widget.hallname}"), // Show hallname in title
         backgroundColor: Colors.blueGrey,
       ),
       body: Padding(

@@ -8,13 +8,14 @@ import 'notice_page.dart';
 import 'report_page.dart';
 import 'admin_create_event_page.dart';
 import 'event_participationList_page.dart';
-import 'teacher_approval.dart'; // Added import for ApprovalPage
+import 'teacher_seat_approval.dart'; // Added import for ApprovalPage
 
 class AdminHomePage extends StatefulWidget {
   final String name;
   final String email;
+  final String hallname;
 
-  const AdminHomePage({super.key, required this.name, required this.email});
+  const AdminHomePage({super.key, required this.name, required this.email, required this.hallname});
 
   @override
   State<AdminHomePage> createState() => AdminHomePageState();
@@ -30,9 +31,9 @@ class AdminHomePageState extends State<AdminHomePage> {
     super.initState();
     _pages = [
       _buildDashboardPage(),
-      const NoticePage(),
-      const UserListPage(userRole: "admin"),
-      ProvostProfilePage(),
+      NoticePage(hallname : widget.hallname),
+       UserListPage(userRole: "Admin", hallname : widget.hallname),
+      ProvostProfilePage(email: widget.email, hallName :widget.hallname),
     ];
   }
 
@@ -105,35 +106,35 @@ class AdminHomePageState extends State<AdminHomePage> {
                   Icons.verified_user,
                   "User Approvals",
                   Colors.blue,
-                  const ApprovalRequestsPage(),
+                   ApprovalRequestsPage(hallname :widget.hallname),
                 ),
                 _menuTile(
                   context,
                   Icons.report,
                   "See Report List",
                   Colors.orange,
-                  const ReportPage(),
+                   ReportPage(hallName: widget.hallname),
                 ),
                 _menuTile(
                   context,
                   Icons.settings,
                   "Post Notice",
                   Colors.green,
-                  const PostNoticePage(),
+                   PostNoticePage(hallname : widget.hallname),
                 ),
                 _menuTile(
                   context,
                   Icons.event,
                   "Create Event",
                   Colors.deepPurple,
-                  const AdminCreateEventPage(),
+                   AdminCreateEventPage(hallName:  widget.hallname),
                 ),
                 _menuTile(
                   context,
                   Icons.event,
                   "Event Participation",
                   Colors.blue,
-                  const AdminEventParticipationPage(),
+                  AdminEventParticipationPage(hallName: widget.hallname),
                 ),
                 // Added seat approval tile here
                 _menuTile(
@@ -141,7 +142,7 @@ class AdminHomePageState extends State<AdminHomePage> {
                   Icons.event_seat,
                   "Seat Approvals",
                   Colors.purple,
-                  ApprovalPage(teacherEmail: widget.email), // Pass admin email
+                  ApprovalPage(teacherEmail: widget.email, hallname: widget.hallname), // Pass admin email
                 ),
               ],
             ),
@@ -155,7 +156,7 @@ class AdminHomePageState extends State<AdminHomePage> {
     if (index == 3) {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => ProvostProfilePage()),
+        MaterialPageRoute(builder: (_) => ProvostProfilePage(email: widget.email, hallName: widget.hallname)),
       );
     } else {
       setState(() {

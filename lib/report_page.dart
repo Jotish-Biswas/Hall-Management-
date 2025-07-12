@@ -9,6 +9,7 @@ class Report {
   final String title;
   final String message;
   final DateTime timestamp;
+  final String hallName; // Added hallName field
 
   Report({
     required this.email,
@@ -16,6 +17,7 @@ class Report {
     required this.title,
     required this.message,
     required this.timestamp,
+    required this.hallName, // Added to constructor
   });
 
   factory Report.fromJson(Map<String, dynamic> json) {
@@ -25,12 +27,15 @@ class Report {
       title: json['title'],
       message: json['message'],
       timestamp: DateTime.parse(json['timestamp']),
+      hallName: json['hall_name'] ?? 'Unknown Hall', // Added hallName
     );
   }
 }
 
 class ReportPage extends StatefulWidget {
-  const ReportPage({super.key});
+  final String hallName; // Add hallName parameter
+
+  const ReportPage({super.key, required this.hallName});
 
   @override
   State<ReportPage> createState() => _ReportPageState();
@@ -60,7 +65,10 @@ class _ReportPageState extends State<ReportPage> {
 
   Future<void> fetchReports() async {
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:8000/reports'));
+      // Add hall_name parameter to API call
+      final url = Uri.parse('http://127.0.0.1:8000/reports?hall_name=${widget.hallName}');
+      final response = await http.get(url);
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         _allReports = data.map((json) => Report.fromJson(json)).toList();
@@ -92,19 +100,21 @@ class _ReportPageState extends State<ReportPage> {
   }
 
   Future<void> deleteReport(String reportId) async {
-    final url = Uri.parse('http://127.0.0.1:8000/reports/$reportId');
+    // Add hall_name parameter to delete request
+    final url = Uri.parse('http://127.0.0.1:8000/reports/$reportId?hall_name=${widget.hallName}');
     final response = await http.delete(url);
+
     if (response.statusCode == 200) {
       setState(() {
-        _allReports.removeWhere((notice) => notice.id == reportId);
-        _filteredReports.removeWhere((notice) => notice.id == reportId);
+        _allReports.removeWhere((report) => report.id == reportId);
+        _filteredReports.removeWhere((report) => report.id == reportId);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notice deleted successfully')),
+        const SnackBar(content: Text('Report deleted successfully')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete notice: ${response.body}')),
+        SnackBar(content: Text('Failed to delete report: ${response.body}')),
       );
     }
   }
@@ -134,7 +144,7 @@ class _ReportPageState extends State<ReportPage> {
           autofocus: true,
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-            hintText: 'Search Notices...',
+            hintText: 'Search Reports...',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide.none,
@@ -148,7 +158,7 @@ class _ReportPageState extends State<ReportPage> {
         ),
       );
     } else {
-      return const Text('Reports List');
+      return Text('Reports - ${widget.hallName}'); // Show hall name in title
     }
   }
 
@@ -172,7 +182,6 @@ class _ReportPageState extends State<ReportPage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: _buildAppBarTitle(),
@@ -184,7 +193,7 @@ class _ReportPageState extends State<ReportPage> {
           : _errorMessage.isNotEmpty
           ? Center(child: Text(_errorMessage))
           : _filteredReports.isEmpty
-          ? const Center(child: Text("No reports found"))
+          ? const Center(child: Text("No reports found for this hall"))
           : ListView.builder(
         itemCount: _filteredReports.length,
         itemBuilder: (context, index) {
@@ -201,6 +210,10 @@ class _ReportPageState extends State<ReportPage> {
                 children: [
                   Text(
                     "Posted by: ${report.email}",
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  Text(
+                    "Hall: ${report.hallName}", // Show hall name in list
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   Text(
@@ -249,8 +262,7 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                 );
               },
-            )
-            ,
+            ),
           );
         },
       ),

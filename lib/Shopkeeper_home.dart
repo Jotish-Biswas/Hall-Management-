@@ -7,8 +7,9 @@ import 'post_report_page.dart';
 class ShopkeeperHomePage extends StatefulWidget {
   final String name;
   final String email;
+  final String hallname;
 
-  const ShopkeeperHomePage({super.key, required this.name, required this.email});
+  const ShopkeeperHomePage({super.key, required this.name, required this.email, required this.hallname});
 
   @override
   State<ShopkeeperHomePage> createState() => _ShopkeeperHomePageState();
@@ -43,7 +44,7 @@ class _ShopkeeperHomePageState extends State<ShopkeeperHomePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ShopkeeperProfilePage(email: widget.email),
+                builder: (context) => ShopkeeperProfilePage(email: widget.email, hallname : widget.hallname),
               ),
             );
           }
@@ -66,7 +67,7 @@ class _ShopkeeperHomePageState extends State<ShopkeeperHomePage> {
       case 0:
         return _buildMainPage();
       case 1:
-        return User_NoticePage();
+        return User_NoticePage(hallname: widget.hallname);
       case 2:
         return const Center(child: Text("Chat Page Coming Soon..."));
       default:
@@ -156,7 +157,7 @@ class _ShopkeeperHomePageState extends State<ShopkeeperHomePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const User_NoticePage(),
+                        builder: (_) => User_NoticePage(hallname : widget.hallname),
                       ),
                     );
                   },
@@ -169,7 +170,7 @@ class _ShopkeeperHomePageState extends State<ShopkeeperHomePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => PostReportPage(email: widget.email),
+                        builder: (_) => PostReportPage(email: widget.email, hallname : widget.hallname),
                       ),
                     );
                   },

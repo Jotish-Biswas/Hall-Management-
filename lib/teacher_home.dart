@@ -8,12 +8,13 @@ import 'notice_page.dart';
 import 'report_page.dart';
 import 'approval_by_teacher.dart';
 import 'teacher_user_list_page.dart';
-import 'teacher_approval.dart';
+import 'teacher_seat_approval.dart';
 class TeacherHomepage extends StatefulWidget {
   final String name;
   final String email;
+  final String hallname;
 
-  const TeacherHomepage({super.key, required this.name, required this.email});
+  const TeacherHomepage({super.key, required this.name, required this.email, required this.hallname});
 
   @override
   State<TeacherHomepage> createState() => TeacherHomepageState();
@@ -29,9 +30,9 @@ class TeacherHomepageState extends State<TeacherHomepage> {
     super.initState();
     _pages = [
       _buildDashboardPage(),
-      const NoticePage(),
-      const UserListPage(userRole: "teacher"),
-      TeacherProfilePage(email: widget.email),
+       NoticePage(hallname : widget.hallname),
+       UserListPage(userRole: "teacher", hallname : widget.hallname),
+      TeacherProfilePage(email: widget.email, hallname : widget.hallname),
     ];
   }
 
@@ -107,28 +108,28 @@ class TeacherHomepageState extends State<TeacherHomepage> {
                   Icons.verified_user,
                   "Student Approvals",
                   Colors.blue,
-                  const TeacherApprovalPage(),
+                  TeacherApprovalPage(hallName: widget.hallname),
                 ),
                 _menuTile(
                   context,
                   Icons.report,
                   "See reports List",
                   Colors.orange,
-                  const ReportPage(),
+                  ReportPage(hallName : widget.hallname),
                 ),
                 _menuTile(
                   context,
                   Icons.notification_add, // Better icon for notices
                   "Post Notice",
                   Colors.green,
-                  const PostNoticePage(),
+                   PostNoticePage(hallname: widget.hallname),
                 ),
                 _menuTile(
                   context,
                   Icons.event_seat, // Appropriate icon for seat approval
                   "Approve seats",
                   Colors.purple,
-                  ApprovalPage(teacherEmail: widget.email), // Pass email
+                  ApprovalPage(teacherEmail: widget.email, hallname : widget.hallname), // Pass email
                 ),
               ],
             ),
@@ -143,7 +144,7 @@ class TeacherHomepageState extends State<TeacherHomepage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (_) => TeacherProfilePage(email: widget.email)),
+            builder: (_) => TeacherProfilePage(email: widget.email, hallname : widget.hallname)),
       );
     } else {
       setState(() {
