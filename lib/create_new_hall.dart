@@ -1,129 +1,161 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'waiting_approval_page.dart';
 import 'Admin_home.dart';
 
 class CreateHallPage extends StatefulWidget {
   const CreateHallPage({super.key});
-
   @override
   State<CreateHallPage> createState() => _CreateHallPageState();
 }
 
 class _CreateHallPageState extends State<CreateHallPage> {
-  final TextEditingController fullNameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController hallNameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final fullNameController = TextEditingController();
+  final emailController    = TextEditingController();
+  final hallNameController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmController  = TextEditingController();
 
-  bool _obscurePassword = true;
+  bool _obscurePassword       = true;
   bool _obscureConfirmPassword = true;
 
-  void _createHall() async {
-    String fullName = fullNameController.text.trim();
-    String email = emailController.text.trim();
-    String hallName = hallNameController.text.trim();
-    String password = passwordController.text;
-    String confirmPassword = confirmPasswordController.text;
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
-    // Basic validation
-    if (fullName.isEmpty || email.isEmpty || hallName.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      _showMessage("Please fill in all fields.");
-      return;
+  Future<bool> _verifyNewHallOTP(String email, String hallName) async {
+    // 1) Request OTP
+    final resp1 = await http.post(
+      Uri.parse(
+          'http://127.0.0.1:8000/utils/send-verification-code-new-hall?hall_name=$hallName'
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+    if (resp1.statusCode != 200) {
+      final err = jsonDecode(resp1.body)['detail'] ?? 'Failed to send OTP';
+      _showMessage(err);
+      return false;
     }
 
-    if (password != confirmPassword) {
+    // 2) Prompt for code
+    String? code = await showDialog<String>(
+      context: context,
+      builder: (_) {
+        final ctrl = TextEditingController();
+        return AlertDialog(
+          title: const Text('Enter Verification Code'),
+          content: TextField(
+            controller: ctrl,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(hintText: '6-digit code'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, ctrl.text.trim()),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+    if (code == null || code.isEmpty) return false;
+
+    // 3) Verify code
+    final resp2 = await http.post(
+      Uri.parse('http://127.0.0.1:8000/utils/verify-code'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'code': code}),
+    );
+    if (resp2.statusCode != 200) {
+      _showMessage('Invalid or expired code');
+      return false;
+    }
+    return true;
+  }
+
+  void _createHall() async {
+    final fullName = fullNameController.text.trim();
+    final email    = emailController.text.trim();
+    final hallName = hallNameController.text.trim();
+    final password = passwordController.text;
+    final confirm  = confirmController.text;
+
+    if (fullName.isEmpty ||
+        email.isEmpty ||
+        hallName.isEmpty ||
+        password.isEmpty ||
+        confirm.isEmpty) {
+      _showMessage("Please fill all fields.");
+      return;
+    }
+    if (!email.contains('@') || !email.contains('.')) {
+      _showMessage("Enter a valid email.");
+      return;
+    }
+    if (password != confirm) {
       _showMessage("Passwords do not match.");
       return;
     }
 
-    if (!email.contains('@') || !email.contains('.')) {
-      _showMessage("Please enter a valid email address.");
-      return;
-    }
+    // OTP step
+    bool ok = await _verifyNewHallOTP(email, hallName);
+    if (!ok) return;
 
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
+    // Create hall API
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
 
-      // Send request to backend
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/signup/create-hall'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'full_name': fullName,
-          'email': email,
-          'password': password,
-          'hall_name': hallName,
-        }),
-      );
+    final resp = await http.post(
+      Uri.parse('http://127.0.0.1:8000/signup/create-hall'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'full_name': fullName,
+        'email': email,
+        'password': password,
+        'hall_name': hallName,
+      }),
+    );
+    Navigator.pop(context); // remove loader
 
-      // Remove loading indicator
-      Navigator.of(context).pop();
-
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        // Success - navigate to admin home with all needed data
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AdminHomePage(
-              name: fullName,
-              email: email,
-              hallname: hallName, // Now passing hallName
-            ),
+    if (resp.statusCode == 200) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AdminHomePage(
+            name: fullName,
+            email: email,
+            hallname: hallName,
           ),
-        );
-
-        // Optional: Show success message
-        _showMessage("Hall created successfully! Admin email: ${responseData['admin_email']}");
-      } else {
-        // Handle specific error messages from backend
-        String errorMessage = responseData['detail'] ?? 'Failed to create hall';
-        if (errorMessage.contains('already exists')) {
-          errorMessage = "This hall name is already taken. Please choose another.";
-        }
-        _showMessage(errorMessage);
-      }
-    } on http.ClientException catch (e) {
-      Navigator.of(context).pop();
-      _showMessage("Network error: ${e.message}");
-    } on FormatException catch (e) {
-      Navigator.of(context).pop();
-      _showMessage("Data format error: ${e.message}");
-    } catch (e) {
-      Navigator.of(context).pop();
-      _showMessage("Unexpected error: ${e.toString()}");
+        ),
+      );
+    } else {
+      final msg = jsonDecode(resp.body)['detail'] ?? 'Create hall failed';
+      _showMessage(msg);
     }
-  }
-  void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Hall'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Create New Hall')),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildTextField("Full Name", fullNameController),
-              _buildTextField("Email", emailController),
-              _buildTextField("Hall Name", hallNameController),
-              _buildTextField("Password", passwordController, isPassword: true),
-              _buildTextField("Confirm Password", confirmPasswordController, isPassword: true),
+              _buildField("Full Name", fullNameController),
+              _buildField("Email", emailController),
+              _buildField("Hall Name", hallNameController),
+              _buildField("Password", passwordController, isPassword: true),
+              _buildField("Confirm Password", confirmController, isPassword: true),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _createHall,
@@ -137,25 +169,25 @@ class _CreateHallPageState extends State<CreateHallPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool isPassword = false}) {
+  Widget _buildField(String label, TextEditingController ctrl, {bool isPassword = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextField(
-        controller: controller,
+        controller: ctrl,
         obscureText: isPassword
-            ? (controller == passwordController ? _obscurePassword : _obscureConfirmPassword)
+            ? (ctrl == passwordController ? _obscurePassword : _obscureConfirmPassword)
             : false,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
           suffixIcon: isPassword
               ? IconButton(
-            icon: Icon(controller == passwordController
+            icon: Icon(ctrl == passwordController
                 ? (_obscurePassword ? Icons.visibility_off : Icons.visibility)
                 : (_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility)),
             onPressed: () {
               setState(() {
-                if (controller == passwordController) {
+                if (ctrl == passwordController) {
                   _obscurePassword = !_obscurePassword;
                 } else {
                   _obscureConfirmPassword = !_obscureConfirmPassword;

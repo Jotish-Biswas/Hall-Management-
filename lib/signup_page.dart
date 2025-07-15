@@ -29,6 +29,9 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController hallNameController = TextEditingController(); // Hall Name
 
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,8 +80,6 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Input Fields
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -176,7 +177,6 @@ class _SignUpPageState extends State<SignUpPage> {
             firstDate: DateTime(1900),
             lastDate: DateTime.now(),
           );
-
           if (pickedDate != null) {
             setState(() {
               controller.text = "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
@@ -197,9 +197,6 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-
   Widget _buildTextField(String label, TextEditingController controller,
       {bool obscureText = false, TextInputType keyboardType = TextInputType.text}) {
     bool isPasswordField = label == 'Password';
@@ -219,9 +216,7 @@ class _SignUpPageState extends State<SignUpPage> {
           suffixIcon: obscureText
               ? IconButton(
             icon: Icon(
-              (isPasswordField
-                  ? _obscurePassword
-                  : _obscureConfirmPassword)
+              (isPasswordField ? _obscurePassword : _obscureConfirmPassword)
                   ? Icons.visibility_off
                   : Icons.visibility,
             ),
@@ -259,7 +254,7 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> sendSignUp(Map<String, dynamic> payload) async {
-    final uri = Uri.parse('http://127.0.0.1:8000/signup');
+    final uri = Uri.parse('http://127.0.0.1:8000/signup/');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -270,16 +265,15 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
-  void _register() async {
+  Future<void> _register() async {
     final email = field7Controller.text.trim();
     final password = passwordController.text;
     final confirm = confirmPasswordController.text;
     final fullName = field1Controller.text.trim();
     final hallName = hallNameController.text.trim();
 
-    // Simple client-side checks
     if (!email.contains('@') || !email.contains('.')) {
-      return _showMessage('Please enter a valid email.');
+      return _showMessage('Enter a valid email.');
     }
     if (password.length < 6) {
       return _showMessage('Password must be at least 6 characters.');
@@ -290,11 +284,11 @@ class _SignUpPageState extends State<SignUpPage> {
     if (fullName.isEmpty) {
       return _showMessage('Full Name is required.');
     }
-    if (!termsAccepted) {
-      return _showMessage('You must accept terms & conditions.');
-    }
 
-    // Build the payload
+    // ✅ Email verification
+    bool verified = await _verifyEmailOTP(email, hallName);
+    if (!verified) return;
+
     final payload = {
       'full_name': fullName,
       'email': email,
@@ -320,33 +314,93 @@ class _SignUpPageState extends State<SignUpPage> {
       }
     };
 
-    // Call API
     try {
-      // show loading indicator
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
       await sendSignUp(payload);
-      Navigator.of(context).pop(); // remove loading
+      Navigator.of(context).pop();
 
-      // On success, navigate by role
-      Widget nextPage;
-      if (selectedRole == 'Student') {
-        nextPage = WaitingApprovalPage(name: fullName);
-      } else if (selectedRole == 'Teacher') {
-        nextPage = WaitingApprovalPage(name: fullName);
-      } else {
-        nextPage = WaitingApprovalPage(name: fullName);
-      }
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => nextPage),
+        MaterialPageRoute(
+          builder: (_) => WaitingApprovalPage(name: fullName),
+        ),
       );
     } catch (e) {
-      Navigator.of(context).pop(); // remove loading
+      Navigator.of(context).pop();
       _showMessage(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  Future<bool> _verifyEmailOTP(String email, String hallName) async {
+    try {
+      final sendOtpResponse = await http.post(
+        Uri.parse('http://127.0.0.1:8000/utils/send-verification-code?hall_name=$hallName'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      if (sendOtpResponse.statusCode != 200) {
+        _showMessage('Failed to send OTP: ${sendOtpResponse.body}');
+        return false;
+      }
+
+      String? enteredCode = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          TextEditingController otpController = TextEditingController();
+          return AlertDialog(
+            title: const Text('Verify Your Email'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Enter the 6-digit code sent to your email.'),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    hintText: 'Enter Code',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(null),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(otpController.text.trim());
+                },
+                child: const Text('Verify'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (enteredCode == null || enteredCode.isEmpty) return false;
+
+      final verifyResponse = await http.post(
+        Uri.parse('http://127.0.0.1:8000/utils/verify-code'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'code': enteredCode}),
+      );
+
+      if (verifyResponse.statusCode == 200) {
+        return true;
+      } else {
+        _showMessage('Incorrect or expired code.');
+        return false;
+      }
+    } catch (e) {
+      _showMessage('OTP Verification failed: $e');
+      return false;
     }
   }
 }
