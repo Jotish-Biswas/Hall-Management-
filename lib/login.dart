@@ -7,6 +7,8 @@ import 'waiting_approval_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'forgot_password_page.dart';
+import 'ServerLink.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,6 +22,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
   String selectedRole = 'Student';
 
+  bool _obscurePassword = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,9 +36,10 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.blue),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Role Selector
             Container(
@@ -77,6 +82,7 @@ class _LoginPageState extends State<LoginPage> {
             // Email & Password Fields
             _buildTextField('Email or Username', emailController),
             _buildTextField('Password', passwordController, obscureText: true),
+
             const SizedBox(height: 20),
 
             // Login Button
@@ -127,8 +133,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  bool _obscurePassword = true;
-
   Widget _buildTextField(String label, TextEditingController controller,
       {bool obscureText = false}) {
     return Padding(
@@ -165,7 +169,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    final url = Uri.parse("http://127.0.0.1:8000/login");
+    final url = Uri.parse("$baseUrl/login");
 
     try {
       final response = await http.post(
@@ -194,12 +198,18 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void _handleSuccessfulLogin(String responseBody, String email) {
+  void _handleSuccessfulLogin(String responseBody, String email) async {
     final data = jsonDecode(responseBody);
     String name = data["name"];
     String hallName = data["hall_name"] ?? "Unknown Hall";
 
-    // Navigate based on role
+    // Save login info
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', email);
+    await prefs.setString('role', selectedRole);
+    await prefs.setString('name', name);
+    await prefs.setString('hall_name', hallName);
+
     switch (selectedRole) {
       case 'Student':
         Navigator.pushReplacement(
@@ -235,6 +245,7 @@ class _LoginPageState extends State<LoginPage> {
         break;
     }
   }
+
 
   void _handleUnapprovedUser(String responseBody) {
     final data = jsonDecode(responseBody);

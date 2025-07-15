@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'notice_detail_page.dart';
+import 'ServerLink.dart';
 
 class Notice {
   final String id;
@@ -62,7 +63,7 @@ class _NoticePageState extends State<NoticePage> {
   Future<void> fetchNotices() async {
     try {
       // Pass hallname as query parameter
-      final url = Uri.parse('http://127.0.0.1:8000/notices?hall_name=${Uri.encodeComponent(widget.hallname)}');
+      final url = Uri.parse('$baseUrl/notices?hall_name=${Uri.encodeComponent(widget.hallname)}');
 
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -102,7 +103,7 @@ class _NoticePageState extends State<NoticePage> {
   }
 
   Future<void> deleteNotice(String noticeId) async {
-    final url = Uri.parse('http://127.0.0.1:8000/notices/$noticeId');
+    final url = Uri.parse('$baseUrl/notices/$noticeId');
     final response = await http.delete(url);
     if (response.statusCode == 200) {
       setState(() {

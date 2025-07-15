@@ -6,6 +6,7 @@ import 'shopkeeper_home.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'waiting_approval_page.dart';
+import 'ServerLink.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -105,7 +106,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           borderRadius: BorderRadius.circular(25),
                         ),
                       ),
-                      child: const Text('Register', style: TextStyle(fontSize: 16)),
+                      child: const Text('Register', style: TextStyle(fontSize: 16,color: Colors.white,)),
                     ),
                     const SizedBox(height: 10),
                     ElevatedButton(
@@ -117,7 +118,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           borderRadius: BorderRadius.circular(25),
                         ),
                       ),
-                      child: const Text('About Us', style: TextStyle(fontSize: 16)),
+                      child: const Text('About Us', style: TextStyle(fontSize: 16,color: Colors.white,)),
                     ),
                   ],
                 ),
@@ -254,7 +255,7 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> sendSignUp(Map<String, dynamic> payload) async {
-    final uri = Uri.parse('http://127.0.0.1:8000/signup/');
+    final uri = Uri.parse('$baseUrl/signup/');
     final response = await http.post(
       uri,
       headers: {'Content-Type': 'application/json'},
@@ -338,7 +339,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<bool> _verifyEmailOTP(String email, String hallName) async {
     try {
       final sendOtpResponse = await http.post(
-        Uri.parse('http://127.0.0.1:8000/utils/send-verification-code?hall_name=$hallName'),
+        Uri.parse('$baseUrl/utils/send-verification-code?hall_name=$hallName'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}),
       );
@@ -387,7 +388,7 @@ class _SignUpPageState extends State<SignUpPage> {
       if (enteredCode == null || enteredCode.isEmpty) return false;
 
       final verifyResponse = await http.post(
-        Uri.parse('http://127.0.0.1:8000/utils/verify-code'),
+        Uri.parse('$baseUrl/utils/verify-code'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'code': enteredCode}),
       );

@@ -1,7 +1,9 @@
 import 'dart:convert';
-import 'dart:html' as html; // for web file upload
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
+import 'image_picker_helper.dart'; // conditional import
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TeacherProfilePage extends StatefulWidget {
   final String email;
@@ -25,7 +27,7 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
 
   Future<Map<String, dynamic>> fetchTeacherProfile(String email) async {
     final encodedEmail = Uri.encodeComponent(email);
-    final url = Uri.parse('http://127.0.0.1:8000/teacher/$encodedEmail');
+    final url = Uri.parse('$baseUrl/teacher/$encodedEmail');
 
     final response = await http.get(url);
     if (response.statusCode == 200) {
@@ -37,47 +39,18 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
     }
   }
 
-  void _uploadImage() {
-    html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
-    uploadInput.accept = 'image/*';
-    uploadInput.click();
-
-    uploadInput.onChange.listen((e) async {
-      final files = uploadInput.files;
-      if (files == null || files.isEmpty) return;
-
-      final reader = html.FileReader();
-      reader.readAsDataUrl(files[0]);
-
-      await reader.onLoad.first;
-      final encoded = reader.result as String;
-      final base64String = encoded.split(',').last;
-
-      await uploadImageToServer(base64String);
-    });
-  }
-
-  Future<void> uploadImageToServer(String base64Image) async {
-    final url = Uri.parse('http://127.0.0.1:8000/teacher/${Uri.encodeComponent(widget.email)}/upload-image');
-
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'image_base64': base64Image}),
+  Future<void> _uploadImage() async {
+    final success = await getImagePicker().pickAndUploadImage(
+      email: widget.email,
+      baseUrl: baseUrl,
+      context: context,
+      userType: 'teacher',
+      onSuccess: () {
+        setState(() {
+          teacherData = fetchTeacherProfile(widget.email);
+        });
+      },
     );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        profileImageBase64 = base64Image;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile image uploaded successfully')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to upload image')),
-      );
-    }
   }
 
   void _showLogoutConfirmation(BuildContext context) {
@@ -91,7 +64,7 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              logout(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
             child: const Text("Logout"),
@@ -100,7 +73,11 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
       ),
     );
   }
-
+  void logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Clears login info
+    Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,7 +100,7 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
+            return Center(child: Text("Error: \${snapshot.error}"));
           } else if (!snapshot.hasData) {
             return const Center(child: Text("No profile data found."));
           }
@@ -135,7 +112,7 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
           final dept = data['department'] ?? 'N/A';
           final phone = data['phone'] ?? 'N/A';
           final address = data['address'] ?? 'N/A';
-          final hall = data['hall_name'] ?? widget.hallname; // show hallname
+          final hall = data['hall_name'] ?? widget.hallname;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -146,15 +123,12 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
                     radius: 60,
                     backgroundImage: MemoryImage(base64Decode(profileImageBase64!)),
                   ),
-
                 const SizedBox(height: 10),
-
                 Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 6),
                 Text(email, style: const TextStyle(fontSize: 16, color: Colors.black54)),
                 const SizedBox(height: 20),
                 const Divider(),
-
                 ListTile(
                   leading: const Icon(Icons.school, color: Colors.blue),
                   title: const Text("Department"),
@@ -178,9 +152,8 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
                 ListTile(
                   leading: const Icon(Icons.location_city, color: Colors.blue),
                   title: const Text("Hall Name"),
-                  subtitle: Text(hall), // ✅ Hall name shown here
+                  subtitle: Text(hall),
                 ),
-
                 const SizedBox(height: 30),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.logout),

@@ -43,9 +43,9 @@ class AboutUsPage extends StatelessWidget {
             _buildTeamCard(
               context,
               name: 'Dipta',
-              role: 'Team Leader',
+              role: 'Developer',
               email: 'dipta@gmail.com',
-              imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
+              imageUrl: 'https://scontent.fdac31-2.fna.fbcdn.net/v/t39.30808-6/504060671_689736527552414_1882365572320882137_n.jpg?_nc_cat=107&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeHWz9YOFvhMFQwmA_N96E0o1-xKYgPe6wXX7EpiA97rBXISi0LXlyu9C7QnRFJjsPCrAuMUOuHJeUKQhcxJwJ_v&_nc_ohc=7yheXnjJsYEQ7kNvwF0_7rN&_nc_oc=AdkRNgUPfeeqCenOodWwJD0u4GDwcWwTTbv8oMy5kbqAumKSHYfdkEHvdsHajDJ8Rlw&_nc_zt=23&_nc_ht=scontent.fdac31-2.fna&_nc_gid=nuu8t_NVqgbOfku-gyerfg&oh=00_AfRfXqZO0rAddqPiNu4fscod0hNPb-CPYrjkvpN4NaYl3w&oe=687C3E29',
             ),
             const SizedBox(height: 16),
             _buildTeamCard(
@@ -53,7 +53,7 @@ class AboutUsPage extends StatelessWidget {
               name: 'Nadim Mahmud',
               role: 'Developer',
               email: 'nadim@gmail.com',
-              imageUrl: 'https://randomuser.me/api/portraits/women/1.jpg',
+              imageUrl: 'https://scontent.fdac31-1.fna.fbcdn.net/v/t39.30808-6/503361527_1226212258975107_5929252310696936115_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGTZBtOV-A0hQPikniBmNhFxDJbif9Vol_EMluJ_1WiX6PCdAyqNmo6V7BhOLxsvdYoGr5-uN1OPZ2zuzbsBCHD&_nc_ohc=rMEoH9VMVxEQ7kNvwHQB443&_nc_oc=AdnKLxGlz_FSHpaK3AKoxu_TmomFAWEB9pY9TGvTeVX83-818g3qOraa0nvtpIG8UHc&_nc_zt=23&_nc_ht=scontent.fdac31-1.fna&_nc_gid=dFyEf0ysHX6z7I65ZVqZiQ&oh=00_AfReBmEw5XzvtUXeQMynrafI5ASu-kWHoa5oyDauNoypeA&oe=687C240D',
             ),
             const SizedBox(height: 16),
             _buildTeamCard(
@@ -61,7 +61,7 @@ class AboutUsPage extends StatelessWidget {
               name: 'Tamal',
               role: 'Developer',
               email: 'tamal@gmail.com',
-              imageUrl: 'https://randomuser.me/api/portraits/men/2.jpg',
+              imageUrl: 'https://scontent.fdac31-1.fna.fbcdn.net/v/t39.30808-6/475984362_1164573048566231_5267686621254393992_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=cc71e4&_nc_eui2=AeFmWtcou5Fj2IAcFKOw995_TfEU6J3WOvpN8RTondY6-rdFprZbexKjvrh_a8_GuJ3AlaQlsZq97Y1uSqg10KIB&_nc_ohc=YbnoxRB7QOUQ7kNvwE-HPKX&_nc_oc=AdkxxmiBjeAhF0sonU_abjoHDyJX4NkrW2wD9FmRg6Wxfx6iMfwM_YQRUVL7cXkidfg&_nc_zt=23&_nc_ht=scontent.fdac31-1.fna&_nc_gid=VBZcXEP8L3uN4Qu9esVigg&oh=00_AfQt9E9TzE7O9PDS9D3d9ZZ_D6A6CwS0ZnsHBi4beJTMFw&oe=687C3844',
             ),
             const SizedBox(height: 16),
             _buildTeamCard(
@@ -69,7 +69,7 @@ class AboutUsPage extends StatelessWidget {
               name: 'Jotish',
               role: 'Developer',
               email: 'jotish@gmail.com',
-              imageUrl: 'https://randomuser.me/api/portraits/men/2.jpg',
+              imageUrl: 'https://scontent.fdac31-2.fna.fbcdn.net/v/t39.30808-6/482225901_642037672097256_3730515934046412776_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeGKvODjjI6Jm6zWJaWujcvaYp3E8q7qXZJincTyrupdkttA_jL1RRmDByqUHmb9HR-Qt8TL9Et1vKZLzy-NBG_L&_nc_ohc=RJ6JFHOBVtsQ7kNvwHMsKjr&_nc_oc=Admnz1UozAn2ZLhWNCCohUHY8_1axHmgcPl4Gpvd_omwKraRvkP54x-QKT8WZlOgs4I&_nc_zt=23&_nc_ht=scontent.fdac31-2.fna&_nc_gid=jepeOO8HED4rL8Be4DG96Q&oh=00_AfSq00Q6RumJBKCGM6aak6Zg3jLPlwEB-3dQX_1Jpwvt6g&oe=687C20C3',
             ),
             const SizedBox(height: 30),
             Center(

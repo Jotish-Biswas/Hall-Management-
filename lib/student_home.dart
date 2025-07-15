@@ -9,6 +9,7 @@ import 'chat.dart';
 import 'seat_application.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class StudentHomePage extends StatefulWidget {
   final String name;
@@ -26,7 +27,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
 
   Future<bool> _checkIfApproved() async {
     try {
-      final url = Uri.parse('http://127.0.0.1:8000/api/seat/check-approval')
+      final url = Uri.parse('$baseUrl/api/seat/check-approval')
           .replace(queryParameters: {
         'email': widget.email,
         'hall_name': widget.hallname,

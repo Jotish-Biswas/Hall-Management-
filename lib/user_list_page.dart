@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class UserListPage extends StatefulWidget {
   final String userRole;
@@ -64,7 +65,7 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
     try {
       // Filter by hallname for both admin and teacher
       final uri = Uri.parse(
-        'http://127.0.0.1:8000/users/users_by_hall?role=$currentRole&hall_name=${Uri.encodeComponent(widget.hallname)}&search=${Uri.encodeComponent(searchQuery)}',
+        '$baseUrl/users/users_by_hall?role=$currentRole&hall_name=${Uri.encodeComponent(widget.hallname)}&search=${Uri.encodeComponent(searchQuery)}',
       );
 
       final response = await http.get(uri);
@@ -87,8 +88,8 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
   Future<void> deleteUser(String email) async {
     try {
       final endpoint = widget.userRole.toLowerCase() == "teacher"
-          ? 'http://127.0.0.1:8000/users/teacher/users/delete'
-          : 'http://127.0.0.1:8000/users/delete';
+          ? '$baseUrl/users/teacher/users/delete'
+          : '$baseUrl/users/delete';
 
       final response = await http.delete(
         Uri.parse(endpoint),

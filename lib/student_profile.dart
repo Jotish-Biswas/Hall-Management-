@@ -1,7 +1,11 @@
 import 'dart:convert';
-import 'dart:html' as html; // For Flutter Web
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'image_picker_interface.dart';
+import 'image_picker_platform.dart';
+import 'ServerLink.dart';
+import 'image_picker_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StudentProfilePage extends StatefulWidget {
   final String email;
@@ -21,6 +25,7 @@ class StudentProfilePage extends StatefulWidget {
 
 class _StudentProfilePageState extends State<StudentProfilePage> {
   late Future<Map<String, dynamic>> studentData;
+  final imagePicker = getImagePicker();
 
   @override
   void initState() {
@@ -30,7 +35,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
 
   Future<Map<String, dynamic>> fetchStudentProfile(String email) async {
     final encodedEmail = Uri.encodeComponent(email);
-    final url = Uri.parse('http://127.0.0.1:8000/student/$encodedEmail');
+    final url = Uri.parse('$baseUrl/student/$encodedEmail');
 
     final response = await http.get(url);
     if (response.statusCode == 200) {
@@ -40,43 +45,19 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
     }
   }
 
-  Future<void> _uploadImage() async {
-    final uploadInput = html.FileUploadInputElement();
-    uploadInput.accept = 'image/*';
-    uploadInput.click();
-
-    uploadInput.onChange.listen((event) async {
-      final file = uploadInput.files?.first;
-      if (file != null) {
-        final reader = html.FileReader();
-        reader.readAsDataUrl(file);
-
-        await reader.onLoad.first;
-
-        final encodedImage = reader.result.toString().split(',').last;
-
-        final url = Uri.parse('http://127.0.0.1:8000/student/${Uri.encodeComponent(widget.email)}/upload-image');
-
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'image_base64': encodedImage}),
-        );
-
-        if (response.statusCode == 200) {
-          setState(() {
-            studentData = fetchStudentProfile(widget.email);
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile picture updated!')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to upload image')),
-          );
-        }
-      }
-    });
+  Future<void> uploadImage() async {
+    final picker = getImagePicker(); // <-- This now works
+    await picker.pickAndUploadImage(
+      email: widget.email,
+      baseUrl: baseUrl,
+      context: context,
+      userType: 'student',
+      onSuccess: () {
+        setState(() {
+          studentData = fetchStudentProfile(widget.email);
+        });
+      },
+    );
   }
 
   void _showLogoutConfirmation(BuildContext context) {
@@ -93,7 +74,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              logout(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Logout"),
@@ -102,7 +83,11 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
       ),
     );
   }
-
+  void logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Clears login info
+    Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -126,7 +111,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
+            return Center(child: Text("Error: \${snapshot.error}"));
           } else if (!snapshot.hasData) {
             return const Center(child: Text("No profile data found."));
           }
@@ -162,7 +147,7 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                           bottom: 0,
                           right: 0,
                           child: IconButton(
-                            onPressed: _uploadImage,
+                            onPressed: uploadImage,
                             icon: const Icon(Icons.camera_alt, color: Colors.indigo),
                             tooltip: 'Upload Profile Picture',
                           ),
@@ -181,19 +166,19 @@ class _StudentProfilePageState extends State<StudentProfilePage> {
                         children: [
                           ListTile(
                             leading: const Icon(Icons.school, color: Colors.indigo),
-                            title: Text("Department: $dept"),
+                            title: Text("Department: \$dept"),
                           ),
                           ListTile(
                             leading: const Icon(Icons.calendar_today, color: Colors.indigo),
-                            title: Text("Session: $session"),
+                            title: Text("Session: \$session"),
                           ),
                           ListTile(
                             leading: const Icon(Icons.badge, color: Colors.indigo),
-                            title: Text("Roll No: $roll"),
+                            title: Text("Roll No: \$roll"),
                           ),
                           ListTile(
                             leading: const Icon(Icons.location_city, color: Colors.indigo),
-                            title: Text("Hall Name: $hall"),
+                            title: Text("Hall Name: \$hall"),
                           ),
                         ],
                       ),

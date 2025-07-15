@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'ServerLink.dart';
 
 class AdminCreateEventPage extends StatefulWidget {
   final String hallName; // Add hallName parameter
@@ -62,7 +63,7 @@ class _AdminCreateEventPageState extends State<AdminCreateEventPage> {
 
     // Optionally: Validate that expiryDate <= eventDate here if needed
 
-    final url = Uri.parse('http://127.0.0.1:8000/events');
+    final url = Uri.parse('$baseUrl/events');
     final payload = {
       "title": title,
       "description": description,

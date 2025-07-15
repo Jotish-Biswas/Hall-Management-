@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'ServerLink.dart';
 
 import 'reset_password_page.dart';
 
@@ -33,7 +34,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       isLoading = true;
     });
 
-    final url = Uri.parse("http://127.0.0.1:8000/forgot-password");
+    final url = Uri.parse("$baseUrl/forgot-password");
     final response = await http.post(url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email}));
@@ -65,7 +66,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       isLoading = true;
     });
 
-    final url = Uri.parse("http://127.0.0.1:8000/verify-code");
+    final url = Uri.parse("$baseUrl/verify-code");
     final response = await http.post(url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'code': code}));

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class SeatApplication extends StatefulWidget {
   final String studentEmail;
@@ -60,7 +61,7 @@ class _SeatApplicationState extends State<SeatApplication> {
   }
 
   Future<void> applyForSeat() async {
-    const url = 'http://127.0.0.1:8000/api/seat/apply-for-seat';
+    const url = '$baseUrl/api/seat/apply-for-seat';
 
     setState(() => isLoading = true);
 

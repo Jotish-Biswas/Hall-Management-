@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class ChatPage extends StatefulWidget {
   final String studentEmail;
@@ -16,7 +17,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   List<dynamic> messages = [];
   final TextEditingController _controller = TextEditingController();
-  final String baseUrl = "http://127.0.0.1:8000";
+  final String baseUrll = "$baseUrl";
   final ScrollController _scrollController = ScrollController();
 
   Timer? _timer;

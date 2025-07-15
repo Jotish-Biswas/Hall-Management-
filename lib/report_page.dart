@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'report_detail_page.dart';
+import 'ServerLink.dart';
 
 class Report {
   final String id;
@@ -66,7 +67,7 @@ class _ReportPageState extends State<ReportPage> {
   Future<void> fetchReports() async {
     try {
       // Add hall_name parameter to API call
-      final url = Uri.parse('http://127.0.0.1:8000/reports?hall_name=${widget.hallName}');
+      final url = Uri.parse('$baseUrl/reports?hall_name=${widget.hallName}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -101,7 +102,7 @@ class _ReportPageState extends State<ReportPage> {
 
   Future<void> deleteReport(String reportId) async {
     // Add hall_name parameter to delete request
-    final url = Uri.parse('http://127.0.0.1:8000/reports/$reportId?hall_name=${widget.hallName}');
+    final url = Uri.parse('$baseUrl/reports/$reportId?hall_name=${widget.hallName}');
     final response = await http.delete(url);
 
     if (response.statusCode == 200) {

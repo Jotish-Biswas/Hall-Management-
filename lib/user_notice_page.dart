@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'notice_detail_page.dart';
 import 'notice_page.dart';
+import 'ServerLink.dart';
 
 
 class User_NoticePage extends StatefulWidget {
@@ -37,7 +38,7 @@ class _User_NoticePageState extends State<User_NoticePage> {
 
   Future<void> fetchNotices() async {
     try {
-      final url = Uri.parse('http://127.0.0.1:8000/notices?hall_name=${Uri.encodeComponent(widget.hallname)}');
+      final url = Uri.parse('$baseUrl/notices?hall_name=${Uri.encodeComponent(widget.hallname)}');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {

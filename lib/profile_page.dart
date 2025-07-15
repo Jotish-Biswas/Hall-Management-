@@ -1,7 +1,9 @@
 import 'dart:convert';
-import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'image_picker_helper.dart'; // your platform-aware picker interface
+import 'ServerLink.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProvostProfilePage extends StatefulWidget {
   final String email;
@@ -25,7 +27,7 @@ class _ProvostProfilePageState extends State<ProvostProfilePage> {
 
   Future<Map<String, dynamic>> fetchProfile() async {
     final encodedEmail = Uri.encodeComponent(widget.email);
-    final url = Uri.parse('http://127.0.0.1:8000/users/provost/$encodedEmail');
+    final url = Uri.parse('$baseUrl/users/provost/$encodedEmail');
 
     final response = await http.get(url);
     if (response.statusCode == 200) {
@@ -39,43 +41,19 @@ class _ProvostProfilePageState extends State<ProvostProfilePage> {
     }
   }
 
-  Future<void> uploadImage() async {
-    final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
-    uploadInput.click();
+  Future<void> _uploadImage() async {
+    final success = await getImagePicker().pickAndUploadImage(
+      email: widget.email,
+      baseUrl: baseUrl,
+      context: context,
+      userType: 'provost',
+      onSuccess: () {
+        setState(() {
+          provostData = fetchProfile();
+        });
+      },
+    );
 
-    uploadInput.onChange.listen((event) async {
-      final file = uploadInput.files?.first;
-      if (file != null) {
-        final reader = html.FileReader();
-        reader.readAsDataUrl(file);
-        await reader.onLoad.first;
-
-        final base64Image = reader.result.toString().split(',').last;
-
-        final url = Uri.parse(
-          'http://127.0.0.1:8000/users/${Uri.encodeComponent(widget.email)}/upload-image',
-        );
-
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'image_base64': base64Image}),
-        );
-
-        if (response.statusCode == 200) {
-          setState(() {
-            profileImageBase64 = base64Image;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile picture updated')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Image upload failed')),
-          );
-        }
-      }
-    });
   }
 
   void _showLogoutConfirmation() {
@@ -92,7 +70,7 @@ class _ProvostProfilePageState extends State<ProvostProfilePage> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+              logout(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
             child: const Text("Logout"),
@@ -101,7 +79,11 @@ class _ProvostProfilePageState extends State<ProvostProfilePage> {
       ),
     );
   }
-
+  void logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Clears login info
+    Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,7 +96,7 @@ class _ProvostProfilePageState extends State<ProvostProfilePage> {
           IconButton(
             icon: const Icon(Icons.camera_alt),
             tooltip: "Upload Profile Picture",
-            onPressed: uploadImage,
+            onPressed: _uploadImage,
           )
         ],
       ),
@@ -156,7 +138,7 @@ class _ProvostProfilePageState extends State<ProvostProfilePage> {
                       right: 0,
                       child: IconButton(
                         icon: const Icon(Icons.camera_alt, color: Colors.blue),
-                        onPressed: uploadImage,
+                        onPressed: _uploadImage,
                       ),
                     )
                   ],

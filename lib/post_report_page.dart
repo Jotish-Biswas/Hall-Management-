@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'ServerLink.dart';
 
 class PostReportPage extends StatefulWidget {
   final String email;
@@ -36,7 +37,7 @@ class _PostReportPageState extends State<PostReportPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/reports/post'),
+        Uri.parse('$baseUrl/reports/post'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "email": widget.email,
