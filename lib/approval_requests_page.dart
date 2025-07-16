@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class ApprovalRequestsPage extends StatefulWidget {
   final String hallname;
@@ -30,7 +31,7 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
     try {
       // Correct endpoint with hall_name query parameter
       final uri = Uri.parse(
-        'http://127.0.0.1:8000/admin/unapproved?hall_name=${Uri.encodeComponent(widget.hallname)}',
+        '$baseUrl/admin/unapproved?hall_name=${Uri.encodeComponent(widget.hallname)}',
       );
 
       final response = await http.get(uri);
@@ -65,7 +66,7 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
   Future<void> approveUser(String email) async {
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/admin/approve'),  // Admin endpoint
+        Uri.parse('$baseUrl/admin/approve'),  // Admin endpoint
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
@@ -84,7 +85,7 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
   Future<void> declineUser(String email) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/admin/decline'),  // Admin endpoint
+        Uri.parse('$baseUrl/admin/decline'),  // Admin endpoint
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'ServerLink.dart';
 
 class AdminEventParticipationPage extends StatefulWidget {
   final String hallName;
@@ -23,7 +24,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   }
 
   Future<void> fetchEvents() async {
-    final url = Uri.parse('http://127.0.0.1:8000/events?hall_name=${widget.hallName}');
+    final url = Uri.parse('$baseUrl/events?hall_name=${widget.hallName}');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -40,7 +41,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
 
   Future<void> fetchParticipants(String eventId) async {
     // UPDATED: Use the new endpoint to get full event details
-    final url = Uri.parse('http://127.0.0.1:8000/events/$eventId?hall_name=${widget.hallName}');
+    final url = Uri.parse('$baseUrl/events/$eventId?hall_name=${widget.hallName}');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -58,7 +59,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   }
 
   Future<void> _deleteEvent(String eventId) async {
-    final url = Uri.parse('http://127.0.0.1:8000/events/$eventId?hall_name=${widget.hallName}');
+    final url = Uri.parse('$baseUrl/events/$eventId?hall_name=${widget.hallName}');
     try {
       final response = await http.delete(url);
       if (response.statusCode == 200) {

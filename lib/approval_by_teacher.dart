@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class TeacherApprovalPage extends StatefulWidget {
   final String hallName; // Add hallName parameter
@@ -35,7 +36,7 @@ class _TeacherApprovalPageState extends State<TeacherApprovalPage> with SingleTi
   Future<void> fetchByRole(String role) async {
     try {
       final response = await http.get(Uri.parse(
-          'http://127.0.0.1:8000/teachers/unapproved/forteacher?role=$role&hall_name=${widget.hallName}'
+          '$baseUrl/teachers/unapproved/forteacher?role=$role&hall_name=${widget.hallName}'
       ));
 
       if (response.statusCode == 200) {
@@ -54,7 +55,7 @@ class _TeacherApprovalPageState extends State<TeacherApprovalPage> with SingleTi
 
   Future<void> approve(String email, String role) async {
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:8000/teachers/approve'),
+      Uri.parse('$baseUrl/teachers/approve'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "email": email,
@@ -77,7 +78,7 @@ class _TeacherApprovalPageState extends State<TeacherApprovalPage> with SingleTi
 
   Future<void> decline(String email, String role) async {
     final response = await http.delete(
-      Uri.parse('http://127.0.0.1:8000/teachers/decline'),
+      Uri.parse('$baseUrl/teachers/decline'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "email": email,

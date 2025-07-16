@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class ShopProductsPage extends StatefulWidget {
   final String email;
@@ -28,7 +29,7 @@ class _ShopProductsPageState extends State<ShopProductsPage> {
   }
 
   Future<void> fetchProducts() async {
-    final url = Uri.parse('http://127.0.0.1:8000/inventory/products/${widget.email}');
+    final url = Uri.parse('$baseUrl/inventory/products/${widget.email}');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -53,7 +54,7 @@ class _ShopProductsPageState extends State<ShopProductsPage> {
   }
 
   Future<void> reactToProduct(String action, String productName) async {
-    final url = Uri.parse('http://127.0.0.1:8000/inventory/$action');
+    final url = Uri.parse('$baseUrl/inventory/$action');
     final response = await http.post(url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -85,7 +86,7 @@ class _ShopProductsPageState extends State<ShopProductsPage> {
             onPressed: () async {
               final text = controller.text.trim();
               if (text.isNotEmpty) {
-                final url = Uri.parse('http://127.0.0.1:8000/inventory/comment');
+                final url = Uri.parse('$baseUrl/inventory/comment');
                 await http.post(url,
                     headers: {'Content-Type': 'application/json'},
                     body: jsonEncode({

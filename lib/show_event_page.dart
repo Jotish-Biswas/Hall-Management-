@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'ServerLink.dart';
 
 class StudentEventPage extends StatefulWidget {
   final String studentName;
@@ -28,7 +29,7 @@ class _StudentEventPageState extends State<StudentEventPage> {
   }
 
   Future<void> fetchEvents() async {
-    final url = Uri.parse('http://127.0.0.1:8000/events?hall_name=${Uri.encodeComponent(widget.hallName)}');
+    final url = Uri.parse('$baseUrl/events?hall_name=${Uri.encodeComponent(widget.hallName)}');
 
     try {
       final response = await http.get(url);
@@ -80,12 +81,12 @@ class _StudentEventPageState extends State<StudentEventPage> {
 
     if (reg == null || reg.isEmpty) return;
 
-    final baseUrl = 'http://127.0.0.1:8000/events/$eventId';
+    final baseUrll = '$baseUrl/events/$eventId';
     final queryParam = '?hall_name=${Uri.encodeComponent(widget.hallName)}';
 
     final url = Uri.parse(asVolunteer
-        ? '$baseUrl/interest$queryParam'
-        : '$baseUrl/participate$queryParam'); // FIXED ENDPOINT
+        ? '$baseUrll/interest$queryParam'
+        : '$baseUrll/participate$queryParam'); // FIXED ENDPOINT
 
     final body = jsonEncode(asVolunteer
         ? {

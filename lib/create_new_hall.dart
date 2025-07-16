@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'Admin_home.dart';
+import 'ServerLink.dart';
 
 class CreateHallPage extends StatefulWidget {
   const CreateHallPage({super.key});
@@ -27,7 +28,7 @@ class _CreateHallPageState extends State<CreateHallPage> {
     // 1) Request OTP
     final resp1 = await http.post(
       Uri.parse(
-          'http://127.0.0.1:8000/utils/send-verification-code-new-hall?hall_name=$hallName'
+          '$baseUrl/utils/send-verification-code-new-hall?hall_name=$hallName'
       ),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email}),
@@ -67,7 +68,7 @@ class _CreateHallPageState extends State<CreateHallPage> {
 
     // 3) Verify code
     final resp2 = await http.post(
-      Uri.parse('http://127.0.0.1:8000/utils/verify-code'),
+      Uri.parse('$baseUrl/utils/verify-code'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email, 'code': code}),
     );
@@ -114,7 +115,7 @@ class _CreateHallPageState extends State<CreateHallPage> {
     );
 
     final resp = await http.post(
-      Uri.parse('http://127.0.0.1:8000/signup/create-hall'),
+      Uri.parse('$baseUrl/signup/create-hall'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'full_name': fullName,

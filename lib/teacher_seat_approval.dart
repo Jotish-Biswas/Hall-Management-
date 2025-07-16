@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class ApprovalPage extends StatefulWidget {
   final String teacherEmail;
@@ -19,7 +20,7 @@ class ApprovalPage extends StatefulWidget {
 class _ApprovalPageState extends State<ApprovalPage> {
   List<Map<String, dynamic>> applications = [];
   bool isLoading = true;
-  final String baseUrl = "http://127.0.0.1:8000/api/seat";
+  final String baseUrll = "$baseUrl/api/seat";
 
   @override
   void initState() {
@@ -30,7 +31,7 @@ class _ApprovalPageState extends State<ApprovalPage> {
   Future<void> fetchApplications() async {
     try {
       // Add hallname as query parameter
-      final uri = Uri.parse("$baseUrl/get-all-applications")
+      final uri = Uri.parse("$baseUrll/get-all-applications")
           .replace(queryParameters: {"hall_name": widget.hallname});
 
       final response = await http.get(uri);
@@ -56,7 +57,7 @@ class _ApprovalPageState extends State<ApprovalPage> {
   Future<void> updateApplicationStatus(String id, String status) async {
     try {
       final response = await http.put(
-        Uri.parse("$baseUrl/update-application-status/$id"),
+        Uri.parse("$baseUrll/update-application-status/$id"),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           "status": status,

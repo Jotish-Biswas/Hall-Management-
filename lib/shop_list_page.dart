@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'shop_products_page.dart';
+import 'ServerLink.dart';
 
 class ShopListPage extends StatefulWidget {
   final String hallname;
@@ -26,7 +27,7 @@ class _ShopListPageState extends State<ShopListPage> {
   Future<void> _fetchShopkeepers() async {
     try {
       final url = Uri.parse(
-          'http://127.0.0.1:8000/shopkeepers/emails_with_shoptypes?hall_name=${widget.hallname}'
+          '$baseUrl/shopkeepers/emails_with_shoptypes?hall_name=${widget.hallname}'
       );
 
       final response = await http.get(url);

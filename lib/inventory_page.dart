@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;
+import 'ServerLink.dart';
 
 class InventoryPage extends StatefulWidget {
   final String email;
@@ -33,7 +34,7 @@ class _InventoryPageState extends State<InventoryPage> {
 
   Future<void> _fetchShopkeeperInfo() async {
     try {
-      final resp = await http.get(Uri.parse("http://127.0.0.1:8000/inventory/shopkeeper/profile/${widget.email}"));
+      final resp = await http.get(Uri.parse("$baseUrl/inventory/shopkeeper/profile/${widget.email}"));
       final data = json.decode(resp.body);
       setState(() {
         shopName = data['shop_name'] ?? data['shop_type'] ?? 'Shop';
@@ -47,7 +48,7 @@ class _InventoryPageState extends State<InventoryPage> {
 
   Future<void> _fetchProducts() async {
     setState(() => isLoading = true);
-    final resp = await http.get(Uri.parse("http://127.0.0.1:8000/inventory/${widget.email}"));
+    final resp = await http.get(Uri.parse("$baseUrl/inventory/${widget.email}"));
     setState(() {
       _products = resp.statusCode == 200
           ? List<Map<String, dynamic>>.from(json.decode(resp.body))
@@ -108,7 +109,7 @@ class _InventoryPageState extends State<InventoryPage> {
                     }
 
                     final resp = await http.post(
-                      Uri.parse("http://127.0.0.1:8000/inventory/add"),
+                      Uri.parse("$baseUrl/inventory/add"),
                       headers: {"Content-Type": "application/json"},
                       body: json.encode(body),
                     );

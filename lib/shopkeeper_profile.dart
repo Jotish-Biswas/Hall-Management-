@@ -1,13 +1,19 @@
 import 'dart:convert';
-import 'dart:html' as html; // Only for Flutter Web
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'image_picker_helper.dart';
+import 'ServerLink.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ShopkeeperProfilePage extends StatefulWidget {
   final String email;
   final String hallname;
 
-  const ShopkeeperProfilePage({super.key, required this.email, required this.hallname});
+  const ShopkeeperProfilePage({
+    super.key,
+    required this.email,
+    required this.hallname,
+  });
 
   @override
   State<ShopkeeperProfilePage> createState() => _ShopkeeperProfilePageState();
@@ -24,9 +30,9 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
 
   Future<Map<String, dynamic>> fetchShopkeeperProfile(String email) async {
     final encodedEmail = Uri.encodeComponent(email);
-    final url = Uri.parse('http://127.0.0.1:8000/shopkeeper/$encodedEmail');
-
+    final url = Uri.parse('$baseUrl/shopkeeper/$encodedEmail');
     final response = await http.get(url);
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -35,42 +41,17 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
   }
 
   Future<void> _uploadImage() async {
-    final uploadInput = html.FileUploadInputElement();
-    uploadInput.accept = 'image/*';
-    uploadInput.click();
-
-    uploadInput.onChange.listen((event) async {
-      final file = uploadInput.files?.first;
-      if (file != null) {
-        final reader = html.FileReader();
-        reader.readAsDataUrl(file);
-
-        await reader.onLoad.first;
-        final encodedImage = reader.result.toString().split(',').last;
-
-        final url = Uri.parse(
-            'http://127.0.0.1:8000/shopkeeper/${Uri.encodeComponent(widget.email)}/upload-image');
-
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'image_base64': encodedImage}),
-        );
-
-        if (response.statusCode == 200) {
-          setState(() {
-            shopkeeperData = fetchShopkeeperProfile(widget.email);
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile picture updated!')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to upload image')),
-          );
-        }
-      }
-    });
+    final success = await getImagePicker().pickAndUploadImage(
+      email: widget.email,
+      baseUrl: baseUrl,
+      context: context,
+      userType: 'shopkeeper',
+      onSuccess: () {
+        setState(() {
+          shopkeeperData = fetchShopkeeperProfile(widget.email);
+        });
+      },
+    );
   }
 
   void _showLogoutConfirmation(BuildContext context) {
@@ -80,14 +61,11 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
         title: const Text("Logout"),
         content: const Text("Are you sure you want to logout?"),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              logout(context);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Logout"),
@@ -96,7 +74,11 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
       ),
     );
   }
-
+  void logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Clears login info
+    Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,6 +87,13 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
         title: const Text("Shopkeeper Profile"),
         centerTitle: true,
         backgroundColor: Colors.deepOrange,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.camera_alt),
+            tooltip: "Upload Profile Picture",
+            onPressed: _uploadImage,
+          ),
+        ],
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: shopkeeperData,

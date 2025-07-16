@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class TeacherUserListPage extends StatefulWidget {
   final String hallname;  // <-- Add hallname here
@@ -53,7 +54,7 @@ class _TeacherUserListPageState extends State<TeacherUserListPage>
     try {
       // Include hall_name in query params
       final uri = Uri.parse(
-        'http://127.0.0.1:8000/users/teacher/users?role=$currentRole&hall_name=${Uri.encodeComponent(widget.hallname)}&search=${Uri.encodeComponent(searchQuery)}',
+        '$baseUrl/users/teacher/users?role=$currentRole&hall_name=${Uri.encodeComponent(widget.hallname)}&search=${Uri.encodeComponent(searchQuery)}',
       );
 
       final response = await http.get(uri);
@@ -76,7 +77,7 @@ class _TeacherUserListPageState extends State<TeacherUserListPage>
   Future<void> deleteUser(String email) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/users/teacher/users/delete'),
+        Uri.parse('$baseUrl/users/teacher/users/delete'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );

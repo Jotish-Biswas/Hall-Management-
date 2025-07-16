@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'ServerLink.dart';
 
 class PostNoticePage extends StatefulWidget {
   final String hallname; // Add hallname parameter
@@ -30,7 +31,7 @@ class _PostNoticePageState extends State<PostNoticePage> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/notices/post"), // Keep endpoint
+        Uri.parse("$baseUrl/notices/post"), // Keep endpoint
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "title": title,
