@@ -1,15 +1,20 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'image_picker_helper.dart'; // your platform-aware picker interface
-import 'ServerLink.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'ServerLink.dart';
+import 'image_picker_helper.dart';
 
 class ProvostProfilePage extends StatefulWidget {
   final String email;
   final String hallName;
 
-  const ProvostProfilePage({super.key, required this.email, required this.hallName});
+  const ProvostProfilePage({
+    super.key,
+    required this.email,
+    required this.hallName,
+  });
 
   @override
   State<ProvostProfilePage> createState() => _ProvostProfilePageState();
@@ -53,7 +58,6 @@ class _ProvostProfilePageState extends State<ProvostProfilePage> {
         });
       },
     );
-
   }
 
   void _showLogoutConfirmation() {
@@ -72,34 +76,67 @@ class _ProvostProfilePageState extends State<ProvostProfilePage> {
               Navigator.pop(context);
               logout(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
             child: const Text("Logout"),
           ),
         ],
       ),
     );
   }
+
   void logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Clears login info
+    await prefs.clear();
     Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.teal[50],
-      appBar: AppBar(
-        title: const Text("Provost Profile"),
-        centerTitle: true,
-        backgroundColor: Colors.blue,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.camera_alt),
-            tooltip: "Upload Profile Picture",
-            onPressed: _uploadImage,
-          )
-        ],
+      backgroundColor: Colors.grey[100],
+      appBar:  AppBar(
+  elevation: 0,
+  flexibleSpace: Container(
+    decoration: const BoxDecoration(
+      gradient: LinearGradient(
+        colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
+    ),
+  ),
+  leading: Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: GestureDetector(
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 154, 151, 151),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 4,
+              offset: const Offset(2, 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(6),
+        child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+      ),
+    ),
+  ),
+  title: const Text("Provost Profile", style: TextStyle(color: Colors.white)),
+  centerTitle: true,
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.camera_alt, color: Colors.white),
+      tooltip: "Upload Profile Picture",
+      onPressed: _uploadImage,
+    )
+  ],
+),
+
       body: FutureBuilder<Map<String, dynamic>>(
         future: provostData,
         builder: (context, snapshot) {
@@ -119,64 +156,103 @@ class _ProvostProfilePageState extends State<ProvostProfilePage> {
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 70,
-                      backgroundColor: Colors.white,
-                      backgroundImage: profileImageBase64 != null
-                          ? MemoryImage(base64Decode(profileImageBase64!))
-                          : null,
-                      child: profileImageBase64 == null
-                          ? const Icon(Icons.person, size: 60, color: Colors.grey)
-                          : null,
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: IconButton(
-                        icon: const Icon(Icons.camera_alt, color: Colors.blue),
-                        onPressed: _uploadImage,
-                      ),
+            child: Center(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 15,
+                      offset: Offset(0, 10),
                     )
                   ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  hallName,
-                  style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blueAccent),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        CircleAvatar(
+                          radius: 70,
+                          backgroundColor: Colors.grey[200],
+                          backgroundImage: profileImageBase64 != null
+                              ? MemoryImage(base64Decode(profileImageBase64!))
+                              : null,
+                          child: profileImageBase64 == null
+                              ? const Icon(Icons.person, size: 70, color: Colors.grey)
+                              : null,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blue),
+                          onPressed: _uploadImage,
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      hallName,
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      name,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      email,
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.blueGrey.shade100),
+                        borderRadius: BorderRadius.circular(15),
+                        color: Colors.blueGrey.shade50,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.phone, color: Colors.teal),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Phone",
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                              Text(phone,
+                                  style: const TextStyle(fontSize: 16, color: Colors.black87)),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.logout),
+                      label: const Text("Logout"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      onPressed: _showLogoutConfirmation,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  name,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6),
-                Text(email, style: const TextStyle(fontSize: 16, color: Colors.black54)),
-                const SizedBox(height: 10),
-                ListTile(
-                  leading: const Icon(Icons.phone, color: Colors.blue),
-                  title: const Text("Phone"),
-                  subtitle: Text(phone),
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.logout),
-                  label: const Text("Logout"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                  ),
-                  onPressed: _showLogoutConfirmation,
-                ),
-              ],
+              ),
             ),
           );
         },

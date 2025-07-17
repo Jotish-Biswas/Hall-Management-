@@ -8,7 +8,7 @@ import 'notice_page.dart';
 import 'report_page.dart';
 import 'admin_create_event_page.dart';
 import 'event_participationList_page.dart';
-import 'teacher_seat_approval.dart'; // Added import for ApprovalPage
+import 'teacher_seat_approval.dart';
 
 class AdminHomePage extends StatefulWidget {
   final String name;
@@ -23,7 +23,6 @@ class AdminHomePage extends StatefulWidget {
 
 class AdminHomePageState extends State<AdminHomePage> {
   int _selectedIndex = 0;
-
   late final List<Widget> _pages;
 
   @override
@@ -31,9 +30,9 @@ class AdminHomePageState extends State<AdminHomePage> {
     super.initState();
     _pages = [
       _buildDashboardPage(),
-      NoticePage(hallname : widget.hallname),
-       UserListPage(userRole: "Admin", hallname : widget.hallname),
-      ProvostProfilePage(email: widget.email, hallName :widget.hallname),
+      NoticePage(hallname: widget.hallname),
+      UserListPage(userRole: "Admin", hallname: widget.hallname),
+      ProvostProfilePage(email: widget.email, hallName: widget.hallname),
     ];
   }
 
@@ -43,8 +42,14 @@ class AdminHomePageState extends State<AdminHomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            color: Colors.blueGrey,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -53,7 +58,7 @@ class AdminHomePageState extends State<AdminHomePage> {
                   widget.name,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -65,17 +70,17 @@ class AdminHomePageState extends State<AdminHomePage> {
                     Icon(Icons.admin_panel_settings, color: Colors.white),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
                 Container(
                   height: 120,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.deepPurple,
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.deepPurple.withOpacity(0.8),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      "Review and Approve Users",
+                      "Welcome to ${widget.hallname}",
                       style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
                   ),
@@ -83,13 +88,11 @@ class AdminHomePageState extends State<AdminHomePage> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text("Main Menu", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              ],
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            child: Text(
+              "Main Menu",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
           ),
           Padding(
@@ -101,49 +104,12 @@ class AdminHomePageState extends State<AdminHomePage> {
               crossAxisSpacing: 15,
               mainAxisSpacing: 15,
               children: [
-                _menuTile(
-                  context,
-                  Icons.verified_user,
-                  "User Approvals",
-                  Colors.blue,
-                   ApprovalRequestsPage(hallname :widget.hallname),
-                ),
-                _menuTile(
-                  context,
-                  Icons.report,
-                  "See Report List",
-                  Colors.orange,
-                   ReportPage(hallName: widget.hallname),
-                ),
-                _menuTile(
-                  context,
-                  Icons.settings,
-                  "Post Notice",
-                  Colors.green,
-                   PostNoticePage(hallname : widget.hallname),
-                ),
-                _menuTile(
-                  context,
-                  Icons.event,
-                  "Create Event",
-                  Colors.deepPurple,
-                   AdminCreateEventPage(hallName:  widget.hallname),
-                ),
-                _menuTile(
-                  context,
-                  Icons.event,
-                  "Event Participation",
-                  Colors.blue,
-                  AdminEventParticipationPage(hallName: widget.hallname),
-                ),
-                // Added seat approval tile here
-                _menuTile(
-                  context,
-                  Icons.event_seat,
-                  "Seat Approvals",
-                  Colors.purple,
-                  ApprovalPage(teacherEmail: widget.email, hallname: widget.hallname), // Pass admin email
-                ),
+                _menuTile(context, Icons.verified_user, "User Approvals", Colors.blue, ApprovalRequestsPage(hallname: widget.hallname)),
+                _menuTile(context, Icons.report, "See Report List", Colors.orange, ReportPage(hallName: widget.hallname)),
+                _menuTile(context, Icons.settings, "Post Notice", Colors.green, PostNoticePage(hallname: widget.hallname)),
+                _menuTile(context, Icons.event, "Create Event", Colors.deepPurple, AdminCreateEventPage(hallName: widget.hallname)),
+                _menuTile(context, Icons.event, "Event Participation", Colors.blue, AdminEventParticipationPage(hallName: widget.hallname)),
+                _menuTile(context, Icons.event_seat, "Seat Approvals", Colors.purple, ApprovalPage(teacherEmail: widget.email, hallname: widget.hallname)),
               ],
             ),
           ),
@@ -168,11 +134,26 @@ class AdminHomePageState extends State<AdminHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey[50],
+      appBar: AppBar(
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: const Text("Admin Dashboard", style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+      ),
+      backgroundColor: Colors.grey[100],
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blueGrey,
+        selectedItemColor: Colors.indigo,
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
         items: const [
@@ -185,37 +166,43 @@ class AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  Widget _menuTile(
-      BuildContext context,
-      IconData icon,
-      String title,
-      Color color,
-      Widget destinationPage,
-      ) {
-    return InkWell(
+  Widget _menuTile(BuildContext context, IconData icon, String title, Color color, Widget destinationPage) {
+    return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => destinationPage),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (_) => destinationPage));
       },
       child: Container(
         decoration: BoxDecoration(
-          color: color.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.8), color],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
-        child: Center(
-          child: ListTile(
-            leading: Icon(icon, color: Colors.white, size: 30),
-            title: Text(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 40),
+            const SizedBox(height: 10),
+            Text(
               title,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

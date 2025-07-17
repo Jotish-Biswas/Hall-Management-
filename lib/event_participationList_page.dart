@@ -30,6 +30,9 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
       if (response.statusCode == 200) {
         setState(() {
           events = jsonDecode(response.body);
+          // Clear participation data when events are refreshed
+          participationData = {};
+          selectedEventId = '';
         });
       } else {
         showError("Failed to load events: ${response.statusCode}");
@@ -40,7 +43,6 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   }
 
   Future<void> fetchParticipants(String eventId) async {
-    // UPDATED: Use the new endpoint to get full event details
     final url = Uri.parse('$baseUrl/events/$eventId?hall_name=${widget.hallName}');
     try {
       final response = await http.get(url);
@@ -141,8 +143,39 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Event Participation - ${widget.hallName}"),
-        backgroundColor: Colors.blueGrey,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 154, 151, 151),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(6),
+              child: const Icon(Icons.arrow_back, color: Colors.lightBlue, size: 24),
+            ),
+          ),
+        ),
+        title: Text("Event Participation - ${widget.hallName}", style: const TextStyle(color: Colors.white)),
+        centerTitle: true,
       ),
       body: events.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -160,11 +193,12 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
               ),
             ),
           ),
-
           ...events.map((event) {
+            final isSelected = selectedEventId == event['id'];
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
               elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: ListTile(
                 title: Text(event['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Column(
@@ -172,8 +206,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
                   children: [
                     Text("Date: ${event['date']}"),
                     Text("Expire: ${event['expiry_date']}"),
-                    Text("Hall: ${event['hall_name']}",
-                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text("Hall: ${event['hall_name']}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
                   ],
                 ),
                 trailing: Wrap(
@@ -181,6 +214,10 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
                   children: [
                     ElevatedButton(
                       onPressed: () => fetchParticipants(event['id']),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isSelected ? Colors.deepPurple : Colors.lightBlue,
+                        foregroundColor: Colors.white,
+                      ),
                       child: const Text("Participants"),
                     ),
                     IconButton(
@@ -192,7 +229,7 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
               ),
             );
           }),
-          if (participationData.isNotEmpty) const Divider(),
+          if (participationData.isNotEmpty) const Divider(thickness: 1.5),
           if (participationData.isNotEmpty) _buildParticipationList(),
         ],
       ),

@@ -18,255 +18,343 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  String selectedRole = 'Student';
-
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String _selectedRole = 'Student';
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  // Blue-White Theme Colors
+  final Color _primaryBlue = const Color(0xFF1976D2);      // Primary blue
+  final Color _darkBlue = const Color(0xFF0D47A1);         // Dark blue
+  final Color _lightBlue = const Color(0xFFBBDEFB);        // Light blue
+  final Color _white = Colors.white;                      // White
+  final Color _darkGrey = const Color(0xFF424242);        // Text color
+  final Color _lightGrey = const Color(0xFFEEEEEE);       // Background
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Hall Management',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.blue),
-      ),
+      backgroundColor: _lightGrey,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Role Selector
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8FFE8),
-                borderRadius: BorderRadius.circular(30),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 80),
+              
+              // Logo & Title
+              Column(
+                children: [
+                  Icon(Icons.account_circle, size: 80, color: _primaryBlue),
+                  const SizedBox(height: 16),
+                  Text(
+                    'HALL MANAGEMENT',
+                    style: TextStyle(
+                      color: _darkBlue,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Welcome back! Please login to continue',
+                    style: TextStyle(
+                      color: _darkGrey,
+                    ),
+                  ),
+                ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: ['Student', 'Teacher', 'Shopkeeper', 'Admin'].map((role) {
-                  bool isSelected = role == selectedRole;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => selectedRole = role),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isSelected ? Colors.blue : Colors.transparent,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          role,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.bold,
+              
+              const SizedBox(height: 40),
+              
+              // Login Card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                color: _white,
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      // Role Selector - Fixed to prevent overflow
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: _lightBlue.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: ['Student', 'Teacher', 'Shopkeeper', 'Admin'].map((role) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 2),
+                                child: GestureDetector(
+                                  onTap: () => setState(() => _selectedRole = role),
+                                  child: Container(
+                                    constraints: BoxConstraints(minWidth: 70),
+                                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                                    decoration: BoxDecoration(
+                                      color: _selectedRole == role ? _primaryBlue : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      role,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: _selectedRole == role ? _white : _darkGrey,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Email & Password Fields
-            _buildTextField('Email or Username', emailController),
-            _buildTextField('Password', passwordController, obscureText: true),
-
-            const SizedBox(height: 20),
-
-            // Login Button
-            ElevatedButton(
-              onPressed: _login,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-              ),
-              child: const Text('Login', style: TextStyle(fontSize: 16, color: Colors.white)),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Sign Up, Create Hall & Forgot Password
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/signup'),
-                  child: const Text('Sign Up', style: TextStyle(color: Colors.blue)),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/create_hall');
-                  },
-                  child: const Text('Create New Hall', style: TextStyle(color: Colors.blue)),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Email Field
+                      TextField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email or Username',
+                          labelStyle: TextStyle(color: _darkGrey.withOpacity(0.6)),
+                          prefixIcon: Icon(Icons.email, color: _primaryBlue),
+                          filled: true,
+                          fillColor: _lightGrey,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: TextStyle(color: _darkGrey),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Password Field
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          labelStyle: TextStyle(color: _darkGrey.withOpacity(0.6)),
+                          prefixIcon: Icon(Icons.lock, color: _primaryBlue),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: _primaryBlue,
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                          filled: true,
+                          fillColor: _lightGrey,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        style: TextStyle(color: _darkGrey),
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Forgot Password
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+                          ),
+                          child: Text(
+                            'Forgot Password?',
+                            style: TextStyle(color: _primaryBlue),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _login,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _primaryBlue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : const Text(
+                                  'LOGIN',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Text('Forgot Password?', style: TextStyle(color: Colors.blue)),
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/about'),
-                  child: const Text('About Us', style: TextStyle(color: Colors.blue)),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Sign Up Prompt
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Don't have an account?",
+                    style: TextStyle(color: _darkGrey),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/signup'),
+                    child: Text(
+                      'Sign Up',
+                      style: TextStyle(
+                        color: _primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Create Hall Button
+              OutlinedButton(
+                onPressed: () => Navigator.pushNamed(context, '/create_hall'),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: _primaryBlue),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-              ],
-            ),
-          ],
+                child: Text(
+                  'CREATE NEW HALL',
+                  style: TextStyle(color: _primaryBlue),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // About Us
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/about'),
+                child: Text(
+                  'About Us',
+                  style: TextStyle(color: _primaryBlue),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      {bool obscureText = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText ? _obscurePassword : false,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const UnderlineInputBorder(),
-          suffixIcon: obscureText
-              ? IconButton(
-            icon: Icon(
-              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-            ),
-            onPressed: () {
-              setState(() {
-                _obscurePassword = !_obscurePassword;
-              });
-            },
-          )
-              : null,
-        ),
-      ),
-    );
-  }
-
-  void _login() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text;
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      _showMessage('Please fill in both fields.');
+      _showSnackBar('Please fill in all fields');
       return;
     }
 
-    final url = Uri.parse("$baseUrl/login");
+    setState(() => _isLoading = true);
 
     try {
       final response = await http.post(
-        url,
+        Uri.parse("$baseUrl/login"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "email": email,
           "password": password,
-          "role": selectedRole,
+          "role": _selectedRole,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
-      // Handle all responses
+      setState(() => _isLoading = false);
+
       if (response.statusCode == 200) {
-        // Approved user - go to home page
-        _handleSuccessfulLogin(response.body, email);
+        await _handleSuccess(response.body, email);
       } else if (response.statusCode == 403) {
-        // Unapproved user - go to waiting page
-        _handleUnapprovedUser(response.body);
+        _handlePendingApproval(response.body);
       } else {
-        // Other errors (404, 401, etc.)
-        _handleErrorResponse(response.body);
+        _showSnackBar('Login failed: ${response.statusCode}');
       }
     } catch (e) {
-      _showMessage("Network error: ${e.toString()}");
+      setState(() => _isLoading = false);
+      _showSnackBar('Error: ${e.toString()}');
     }
   }
 
-  void _handleSuccessfulLogin(String responseBody, String email) async {
-    final data = jsonDecode(responseBody);
-    String name = data["name"];
-    String hallName = data["hall_name"] ?? "Unknown Hall";
-
-    // Save login info
+  Future<void> _handleSuccess(String response, String email) async {
+    final data = jsonDecode(response);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('email', email);
-    await prefs.setString('role', selectedRole);
-    await prefs.setString('name', name);
-    await prefs.setString('hall_name', hallName);
-
-    switch (selectedRole) {
-      case 'Student':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => StudentHomePage(name: name, email: email, hallname: hallName),
-          ),
-        );
-        break;
-      case 'Teacher':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TeacherHomepage(name: name, email: email, hallname: hallName),
-          ),
-        );
-        break;
-      case 'Shopkeeper':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ShopkeeperHomePage(name: name, email: email, hallname: hallName),
-          ),
-        );
-        break;
-      case 'Admin':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => AdminHomePage(name: name, email: email, hallname: hallName),
-          ),
-        );
-        break;
-    }
-  }
-
-
-  void _handleUnapprovedUser(String responseBody) {
-    final data = jsonDecode(responseBody);
-    String name = data["name"] ?? emailController.text.split('@').first;
+    await prefs.setString('role', _selectedRole);
+    await prefs.setString('name', data['name']);
+    await prefs.setString('hall_name', data['hall_name'] ?? 'Unknown Hall');
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => WaitingApprovalPage(name: name)),
+      MaterialPageRoute(
+        builder: (_) => _getHomePage(data['name'], email, data['hall_name']),
+      ),
     );
   }
 
-  void _handleErrorResponse(String responseBody) {
-    try {
-      final errorData = jsonDecode(responseBody);
-      _showMessage("Login failed: ${errorData['detail']}");
-    } catch (e) {
-      _showMessage("Login failed: Unknown error");
+  Widget _getHomePage(String name, String email, String hallName) {
+    switch (_selectedRole) {
+      case 'Student':
+        return StudentHomePage(name: name, email: email, hallname: hallName);
+      case 'Teacher':
+        return TeacherHomepage(name: name, email: email, hallname: hallName);
+      case 'Shopkeeper':
+        return ShopkeeperHomePage(name: name, email: email, hallname: hallName);
+      case 'Admin':
+        return AdminHomePage(name: name, email: email, hallname: hallName);
+      default:
+        return const Scaffold(body: Center(child: Text('Invalid role')));
     }
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  void _handlePendingApproval(String response) {
+    final data = jsonDecode(response);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => WaitingApprovalPage(name: data['name'] ?? 'User'),
+      ),
+    );
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: _primaryBlue,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 }

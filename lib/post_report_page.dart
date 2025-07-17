@@ -54,7 +54,7 @@ class _PostReportPageState extends State<PostReportPage> {
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit report: ${response.body}')),
+          SnackBar(content: Text('Failed: ${response.body}')),
         );
       }
     } catch (e) {
@@ -68,77 +68,146 @@ class _PostReportPageState extends State<PostReportPage> {
 
   @override
   Widget build(BuildContext context) {
+    final gradientColors = [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Post Report"),
-        backgroundColor: Colors.lightBlue,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a title';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _messageController,
-                decoration: const InputDecoration(
-                  labelText: 'Message',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 5,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your report';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submitReport,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightBlue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 15),
-                    ),
-                    child: _isSubmitting
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Submit Report',
-                        style: TextStyle(fontSize: 16)),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Hall: ${widget.hallname}',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontStyle: FontStyle.italic,
-                    ),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 6,
+                    offset: Offset(2, 2),
                   ),
                 ],
               ),
+              child: const Icon(Icons.arrow_back, color: Colors.blueAccent, size: 26),
+            ),
+          ),
+        ),
+        title: const Text(
+          "Post Report",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              // Title Card
+              _buildHoverCard(
+                child: TextFormField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: InputBorder.none,
+                  ),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Please enter a title' : null,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Message Card
+              _buildHoverCard(
+                child: TextFormField(
+                  controller: _messageController,
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    labelText: 'Message',
+                    border: InputBorder.none,
+                    alignLabelWithHint: true,
+                  ),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Please enter your report' : null,
+                ),
+              ),
+              const SizedBox(height: 30),
+
+              // Submit Button Card
+              _buildHoverCard(
+                color: Colors.blue.shade50,
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                child: Column(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _isSubmitting ? null : _submitReport,
+                      icon: const Icon(Icons.send),
+                      label: _isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text("Submit Report"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.lightBlue,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Hall: ${widget.hallname}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHoverCard({
+    required Widget child,
+    Color color = Colors.white,
+    EdgeInsetsGeometry padding = const EdgeInsets.all(16),
+  }) {
+    return Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () {},
+        splashColor: Colors.blue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: padding,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: child,
         ),
       ),
     );

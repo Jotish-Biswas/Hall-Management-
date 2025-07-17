@@ -18,118 +18,302 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   String selectedRole = 'Student';
   bool termsAccepted = false;
+  List<String> hallNames = [];
+  String? selectedHall;
+  bool isLoadingHalls = true;
 
-  final TextEditingController field1Controller = TextEditingController(); // Full Name
+
+  final TextEditingController field1Controller = TextEditingController();
   final TextEditingController field2Controller = TextEditingController();
   final TextEditingController field3Controller = TextEditingController();
   final TextEditingController field4Controller = TextEditingController();
   final TextEditingController field5Controller = TextEditingController();
   final TextEditingController field6Controller = TextEditingController();
-  final TextEditingController field7Controller = TextEditingController(); // Email
+  final TextEditingController field7Controller = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
-  final TextEditingController hallNameController = TextEditingController(); // Hall Name
+  final TextEditingController hallNameController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    _fetchHallNames();
+  }
+  Future<void> _fetchHallNames() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/signup/all-halls'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        setState(() {
+          hallNames = List<String>.from(data['halls']);
+          isLoadingHalls = false;
+        });
+      } else {
+        throw Exception('Failed to load hall names');
+      }
+    } catch (e) {
+      setState(() {
+        isLoadingHalls = false;
+      });
+      _showMessage('Error fetching halls: $e');
+    }
+  }
+
+
+
+  // Define your gradient colors
+  final List<Color> gradientColors = [
+    const Color(0xFF0F2027),
+    const Color(0xFF203A43),
+    const Color(0xFF2C5364),
+  ];
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text('User Registration'), centerTitle: true),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Role Selector
-            Container(
-              padding: const EdgeInsets.all(4),
+      appBar: AppBar(
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFE8FFE8),
-                borderRadius: BorderRadius.circular(30),
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 6,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: ['Student', 'Teacher', 'Shopkeeper'].map((role) {
-                  bool isSelected = role == selectedRole;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() {
-                        selectedRole = role;
-                        _clearFields();
-                      }),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isSelected ? Colors.green : Colors.transparent,
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          role,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.bold,
+              child: const Icon(Icons.arrow_back, color: Colors.blueAccent, size: 26),
+            ),
+          ),
+        ),
+        title: const Text(
+          "Hall Registration",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFf5f7fa), Color(0xFFc3cfe2)],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                const Text(
+                  'Create Account',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2d3748),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Join our community today',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF718096),
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                // Role Selector
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: ['Student', 'Teacher', 'Shopkeeper'].map((role) {
+                      bool isSelected = role == selectedRole;
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() {
+                            selectedRole = role;
+                            _clearFields();
+                          }),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFF4a6fa5) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              role,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : const Color(0xFF4a5568),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildTextField('Hall Name', hallNameController),
-                    const SizedBox(height: 10),
-                    ..._buildFieldsForRole(),
-                    _buildTextField('Password', passwordController, obscureText: true),
-                    _buildTextField('Confirm Password', confirmPasswordController, obscureText: true),
-                    CheckboxListTile(
-                      value: termsAccepted,
-                      onChanged: (value) => setState(() => termsAccepted = value!),
-                      title: const Text('I agree to the terms & conditions'),
-                      controlAffinity: ListTileControlAffinity.leading,
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: termsAccepted ? _register : null,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 50),
-                        backgroundColor: Colors.green,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text('Register', style: TextStyle(fontSize: 16,color: Colors.white,)),
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: _showAboutUs,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 50),
-                        backgroundColor: Colors.blue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                      ),
-                      child: const Text('About Us', style: TextStyle(fontSize: 16,color: Colors.white,)),
-                    ),
-                  ],
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 30),
+
+                // Form Fields
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        isLoadingHalls
+                            ? const CircularProgressIndicator()
+                            : DropdownButtonFormField<String>(
+                          value: selectedHall,
+                          decoration: const InputDecoration(
+                            labelText: 'Select Hall Name',
+                            border: UnderlineInputBorder(),
+                            labelStyle: TextStyle(color: Color(0xFF4a5568)),
+                          ),
+                          items: hallNames.map((hall) {
+                            return DropdownMenuItem<String>(
+                              value: hall,
+                              child: Text(hall),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              selectedHall = value;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(height: 15),
+                        ..._buildFieldsForRole(),
+                        const SizedBox(height: 15),
+                        _buildPasswordField('Password', passwordController),
+                        const SizedBox(height: 15),
+                        _buildPasswordField('Confirm Password', confirmPasswordController),
+                        const SizedBox(height: 15),
+                        
+                        // Terms Checkbox
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: termsAccepted,
+                              onChanged: (value) => setState(() => termsAccepted = value!),
+                              activeColor: const Color(0xFF4a6fa5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            const Text(
+                              'I agree to the terms & conditions',
+                              style: TextStyle(
+                                color: Color(0xFF4a5568),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        // Register Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: termsAccepted ? _register : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4a6fa5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              elevation: 3,
+                            ),
+                            child: const Text(
+                              'Register',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        
+                        // About Us Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: OutlinedButton(
+                            onPressed: _showAboutUs,
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFF4a6fa5)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              'About Us',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF4a6fa5),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
+  // ALL YOUR EXISTING METHODS REMAIN EXACTLY THE SAME
   void _showAboutUs() {
     Navigator.pushNamed(context, '/about');
   }
@@ -191,6 +375,10 @@ class _SignUpPageState extends State<SignUpPage> {
               labelText: label,
               border: const UnderlineInputBorder(),
               suffixIcon: const Icon(Icons.calendar_today),
+              labelStyle: const TextStyle(color: Color(0xFF4a5568)),
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF4a6fa5)),
+              ),
             ),
           ),
         ),
@@ -200,38 +388,55 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Widget _buildTextField(String label, TextEditingController controller,
       {bool obscureText = false, TextInputType keyboardType = TextInputType.text}) {
-    bool isPasswordField = label == 'Password';
-    bool isConfirmField = label == 'Confirm Password';
-
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextField(
         controller: controller,
-        obscureText: obscureText
-            ? (isPasswordField ? _obscurePassword : _obscureConfirmPassword)
-            : false,
+        obscureText: obscureText,
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: const TextStyle(color: Color(0xFF4a5568)),
           border: const UnderlineInputBorder(),
-          suffixIcon: obscureText
-              ? IconButton(
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF4a6fa5)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordField(String label, TextEditingController controller) {
+    bool isPassword = label == 'Password';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword ? _obscurePassword : _obscureConfirmPassword,
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Color(0xFF4a5568)),
+          border: const UnderlineInputBorder(),
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: Color(0xFF4a6fa5)),
+          ),
+          suffixIcon: IconButton(
             icon: Icon(
-              (isPasswordField ? _obscurePassword : _obscureConfirmPassword)
+              (isPassword ? _obscurePassword : _obscureConfirmPassword)
                   ? Icons.visibility_off
                   : Icons.visibility,
+              color: const Color(0xFF4a5568),
             ),
             onPressed: () {
               setState(() {
-                if (isPasswordField) {
+                if (isPassword) {
                   _obscurePassword = !_obscurePassword;
-                } else if (isConfirmField) {
+                } else {
                   _obscureConfirmPassword = !_obscureConfirmPassword;
                 }
               });
             },
-          )
-              : null,
+          ),
         ),
       ),
     );
@@ -271,7 +476,8 @@ class _SignUpPageState extends State<SignUpPage> {
     final password = passwordController.text;
     final confirm = confirmPasswordController.text;
     final fullName = field1Controller.text.trim();
-    final hallName = hallNameController.text.trim();
+    final hallName = selectedHall ?? '';
+
 
     if (!email.contains('@') || !email.contains('.')) {
       return _showMessage('Enter a valid email.');
@@ -286,7 +492,6 @@ class _SignUpPageState extends State<SignUpPage> {
       return _showMessage('Full Name is required.');
     }
 
-    // ✅ Email verification
     bool verified = await _verifyEmailOTP(email, hallName);
     if (!verified) return;
 

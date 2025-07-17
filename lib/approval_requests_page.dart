@@ -11,7 +11,8 @@ class ApprovalRequestsPage extends StatefulWidget {
   State<ApprovalRequestsPage> createState() => _ApprovalRequestsPageState();
 }
 
-class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with SingleTickerProviderStateMixin {
+class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> 
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Map<String, dynamic>> students = [];
   List<Map<String, dynamic>> teachers = [];
@@ -29,7 +30,6 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
     setState(() => isLoading = true);
 
     try {
-      // Correct endpoint with hall_name query parameter
       final uri = Uri.parse(
         '$baseUrl/admin/unapproved?hall_name=${Uri.encodeComponent(widget.hallname)}',
       );
@@ -66,16 +66,29 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
   Future<void> approveUser(String email) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/admin/approve'),  // Admin endpoint
+        Uri.parse('$baseUrl/admin/approve'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Approved $email")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Approved $email"),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
         fetchAllUnapproved();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to approve $email")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to approve $email"),
+            backgroundColor: Colors.red[400],
+          ),
+        );
       }
     } catch (e) {
       print("Approval error: $e");
@@ -85,16 +98,29 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
   Future<void> declineUser(String email) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/admin/decline'),  // Admin endpoint
+        Uri.parse('$baseUrl/admin/decline'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email}),
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Declined $email")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Declined $email"),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
         fetchAllUnapproved();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to decline $email")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to decline $email"),
+            backgroundColor: Colors.red[400],
+          ),
+        );
       }
     } catch (e) {
       print("Decline error: $e");
@@ -102,47 +128,77 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
   }
 
   Widget buildUserList(List<Map<String, dynamic>> users, String role) {
-    if (users.isEmpty) return Center(child: Text("No unapproved $role found."));
+    if (users.isEmpty) {
+      return Center(
+        child: Text(
+          "No unapproved $role found",
+          style: TextStyle(color: Colors.grey[600], fontSize: 16),
+        ),
+      );
+    }
 
     return ListView.builder(
+      padding: const EdgeInsets.all(12),
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
         final extra = user['extra'] ?? {};
 
         return Card(
-          margin: const EdgeInsets.all(10),
-          child: ListTile(
-            title: Text(user['full_name']),
-            subtitle: Column(
+          elevation: 2,
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Email: ${user['email']}"),
-                if (role == "Student") ...[
-                  Text("Department: ${extra['department'] ?? 'N/A'}"),
-                  Text("Session: ${extra['session'] ?? 'N/A'}"),
-                ] else if (role == "Teacher") ...[
-                  Text("Reg No: ${extra['teacher_reg_no'] ?? 'N/A'}"),
-                  Text("Department: ${extra['department'] ?? 'N/A'}"),
-                ] else if (role == "Shopkeeper") ...[
-                  Text("Shop Type: ${extra['shop_type'] ?? 'N/A'}"),
-                  Text("Phone: ${extra['phone'] ?? 'N/A'}"),
-                ]
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton(
-                  onPressed: () => approveUser(user['email']),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text("Approve"),
+                Text(
+                  user['full_name'],
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[800],
+                  ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => declineUser(user['email']),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: const Text("Decline"),
+                const SizedBox(height: 8),
+                Text(
+                  "Email: ${user['email']}",
+                  style: TextStyle(color: Colors.grey[700]),
+                ),
+                const SizedBox(height: 8),
+                
+                if (role == "Student") ...[
+                  _buildDetailRow("Department", extra['department'] ?? 'N/A'),
+                  _buildDetailRow("Session", extra['session'] ?? 'N/A'),
+                ] else if (role == "Teacher") ...[
+                  _buildDetailRow("Reg No", extra['teacher_reg_no'] ?? 'N/A'),
+                  _buildDetailRow("Department", extra['department'] ?? 'N/A'),
+                ] else if (role == "Shopkeeper") ...[
+                  _buildDetailRow("Shop Type", extra['shop_type'] ?? 'N/A'),
+                  _buildDetailRow("Phone", extra['phone'] ?? 'N/A'),
+                ],
+                
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _buildActionButton(
+                      "Approve",
+                      Colors.green,
+                      Icons.check,
+                      () => approveUser(user['email']),
+                    ),
+                    const SizedBox(width: 8),
+                    _buildActionButton(
+                      "Decline",
+                      Colors.red,
+                      Icons.close,
+                      () => declineUser(user['email']),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -152,14 +208,79 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
     );
   }
 
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "$label: ",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(color: Colors.grey[800])),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String text, Color color, IconData icon, VoidCallback onPressed) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        foregroundColor: Colors.white,
+        backgroundColor: color,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      icon: Icon(icon, size: 18),
+      label: Text(text),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text("Admin Approval Requests"),
-        backgroundColor: Colors.lightGreenAccent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          "Approval Requests",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white.withOpacity(0.7),
+          labelStyle: const TextStyle(fontWeight: FontWeight.w500),
           tabs: const [
             Tab(text: "Students"),
             Tab(text: "Teachers"),
@@ -168,15 +289,20 @@ class _ApprovalRequestsPageState extends State<ApprovalRequestsPage> with Single
         ),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
+            )
           : TabBarView(
-        controller: _tabController,
-        children: [
-          buildUserList(students, "Student"),
-          buildUserList(teachers, "Teacher"),
-          buildUserList(shopkeepers, "Shopkeeper"),
-        ],
-      ),
+              controller: _tabController,
+              children: [
+                buildUserList(students, "Student"),
+                buildUserList(teachers, "Teacher"),
+                buildUserList(shopkeepers, "Shopkeeper"),
+              ],
+            ),
     );
   }
 }

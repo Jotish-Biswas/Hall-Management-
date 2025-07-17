@@ -21,6 +21,7 @@ class StudentEventPage extends StatefulWidget {
 
 class _StudentEventPageState extends State<StudentEventPage> {
   List<dynamic> events = [];
+  int hoveredIndex = -1;
 
   @override
   void initState() {
@@ -30,7 +31,6 @@ class _StudentEventPageState extends State<StudentEventPage> {
 
   Future<void> fetchEvents() async {
     final url = Uri.parse('$baseUrl/events?hall_name=${Uri.encodeComponent(widget.hallName)}');
-
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -66,14 +66,8 @@ class _StudentEventPageState extends State<StudentEventPage> {
             decoration: const InputDecoration(hintText: "Registration Number"),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, controller.text),
-              child: const Text("Submit"),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+            TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text("Submit")),
           ],
         );
       },
@@ -81,12 +75,9 @@ class _StudentEventPageState extends State<StudentEventPage> {
 
     if (reg == null || reg.isEmpty) return;
 
-    final baseUrll = '$baseUrl/events/$eventId';
-    final queryParam = '?hall_name=${Uri.encodeComponent(widget.hallName)}';
-
-    final url = Uri.parse(asVolunteer
-        ? '$baseUrll/interest$queryParam'
-        : '$baseUrll/participate$queryParam'); // FIXED ENDPOINT
+    final url = Uri.parse(
+      '$baseUrl/events/$eventId/${asVolunteer ? 'interest' : 'participate'}?hall_name=${Uri.encodeComponent(widget.hallName)}',
+    );
 
     final body = jsonEncode(asVolunteer
         ? {
@@ -111,7 +102,7 @@ class _StudentEventPageState extends State<StudentEventPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Participation successful!")),
         );
-        fetchEvents(); // Refresh event list
+        fetchEvents(); // Refresh
       } else {
         try {
           final data = jsonDecode(response.body);
@@ -130,9 +121,7 @@ class _StudentEventPageState extends State<StudentEventPage> {
     final email = widget.studentEmail;
     final gList = event['general_participants'] ?? [];
     final vList = event['interested_students'] ?? [];
-
-    return gList.any((p) => p['email'] == email) ||
-        vList.any((v) => v['student_email'] == email);
+    return gList.any((p) => p['email'] == email) || vList.any((v) => v['student_email'] == email);
   }
 
   bool hasVolunteered(event) {
@@ -145,8 +134,33 @@ class _StudentEventPageState extends State<StudentEventPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Events - ${widget.hallName}"),
-        backgroundColor: Colors.blue,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4, offset: const Offset(2, 2))],
+              ),
+              padding: const EdgeInsets.all(6),
+              child: const Icon(Icons.arrow_back, color: Colors.lightBlue, size: 24),
+            ),
+          ),
+        ),
+        title: Text("Events - ${widget.hallName}", style: const TextStyle(color: Colors.white)),
+        centerTitle: true,
       ),
       body: events.isEmpty
           ? const Center(child: CircularProgressIndicator())
@@ -156,64 +170,116 @@ class _StudentEventPageState extends State<StudentEventPage> {
           final event = events[index];
           final maxVol = event['max_volunteers'] ?? 0;
           final currVol = (event['interested_students'] ?? []).length;
-          final isFull = currVol >= maxVol;
+          final isFull =  maxVol == 0 || currVol >= maxVol;;
           final userJoined = hasParticipated(event);
           final userVolunteered = hasVolunteered(event);
 
-          return Card(
-            margin: const EdgeInsets.all(10),
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
+          return MouseRegion(
+            cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => hoveredIndex = index),
+            onExit: (_) => setState(() => hoveredIndex = -1),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: hoveredIndex == index ? Colors.blue.shade50 : Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6, offset: const Offset(0, 3))],
+                border: Border.all(
+                  color: hoveredIndex == index ? Colors.blue.shade300 : Colors.grey.shade300,
+                  width: 1.5,
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(event['title'],
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  Text("Date: ${event['date']}"),
-                  Text("Expire: ${event['expiry_date'] ?? "N/A"}"),
-                  Text(
-                    "Volunteers: $currVol / $maxVol",
-                    style: const TextStyle(color: Colors.deepPurple),
-                  ),
-                  Text(
-                    "Hall: ${event['hall_name']}",
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
+                  Text(event['title'], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
                   const SizedBox(height: 8),
-                  Text(event['description'] ?? "No description",
-                      style: const TextStyle(color: Colors.black87)),
-                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today, size: 18, color: Colors.blueAccent),
+                      const SizedBox(width: 6),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(color: Colors.black87, fontSize: 14),
+                          children: [
+                            const TextSpan(text: 'Date: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                            TextSpan(text: event['date']),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.hourglass_bottom, size: 18, color: Colors.orange),
+                      const SizedBox(width: 6),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(color: Colors.black87, fontSize: 14),
+                          children: [
+                            const TextSpan(text: 'Expiry: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                            TextSpan(text: event['expiry_date'] ?? "N/A"),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.volunteer_activism, size: 18, color: Colors.purple),
+                      const SizedBox(width: 6),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(color: Colors.deepPurple, fontSize: 14),
+                          children: [
+                            const TextSpan(text: 'Volunteers: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                            TextSpan(text: '$currVol / $maxVol'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.home, size: 18, color: Colors.grey),
+                      const SizedBox(width: 6),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(color: Colors.grey, fontSize: 12),
+                          children: [
+                            const TextSpan(text: 'Hall: ', style: TextStyle(fontWeight: FontWeight.bold)),
+                            TextSpan(text: event['hall_name']),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(event['description'] ?? "No description", style: const TextStyle(color: Colors.black87, fontSize: 15)),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton.icon(
-                        onPressed: userJoined
-                            ? null
-                            : () => participate(event['id'], false),
+                        onPressed: userJoined ? null : () => participate(event['id'], false),
                         icon: const Icon(Icons.group),
                         label: const Text("Participate"),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: userJoined ? Colors.grey : Colors.white,
+                          backgroundColor: userJoined ? Colors.grey : Colors.blue,
                         ),
                       ),
-                      isFull
-                          ? const Text(
-                        "No Volunteer Needed",
-                        style: TextStyle(
-                            color: Colors.red, fontWeight: FontWeight.bold),
-                      )
-                          : ElevatedButton.icon(
-                        onPressed: userJoined
-                            ? null
-                            : () => participate(event['id'], true),
+                      ElevatedButton.icon(
+                        onPressed: (userVolunteered || isFull) ? null : () => participate(event['id'], true),
                         icon: const Icon(Icons.volunteer_activism),
                         label: const Text("Volunteer"),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: userJoined
-                              ? Colors.grey
-                              : Colors.deepPurple[50],
+                          backgroundColor:
+                          (userVolunteered || isFull) ? Colors.grey : Colors.deepPurpleAccent.shade100,
                         ),
                       ),
                     ],

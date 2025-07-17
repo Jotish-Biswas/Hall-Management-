@@ -208,7 +208,7 @@ class _UserListPageState extends State<UserListPage> with SingleTickerProviderSt
                 child: Text(
                   roles[index],
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: _tabController.index == index ? getTabColor(index) : Colors.white70,
                   ),
