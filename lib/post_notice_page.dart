@@ -146,9 +146,10 @@ class _PostNoticePageState extends State<PostNoticePage> {
                     icon: const Icon(Icons.send),
                     label: const Text("Post Notice"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF203A43),
+                      backgroundColor: Colors.blue[400],
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       textStyle: const TextStyle(fontSize: 16),
+                      foregroundColor: Colors.white,
                     ),
                   ),
                 ),

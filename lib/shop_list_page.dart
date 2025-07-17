@@ -29,9 +29,7 @@ class _ShopListPageState extends State<ShopListPage> {
       final url = Uri.parse(
           '$baseUrl/shopkeepers/emails_with_shoptypes?hall_name=${widget.hallname}'
       );
-
       final response = await http.get(url);
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
@@ -93,36 +91,36 @@ class _ShopListPageState extends State<ShopListPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : _shops.isEmpty
-                  ? const Center(child: Text('No shops available in this hall', style: TextStyle(fontSize: 18)))
-                  : GridView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _shops.length,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 1, // Makes it square
-                      ),
-                      itemBuilder: (context, index) {
-                        final shop = _shops[index];
-                        return ShopCard(
-                          shop: shop,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ShopProductsPage(
-                                  email: shop['email'] ?? '',
-                                  shopName: shop['shop_type'] ?? 'Shop',
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+          ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
+          : _shops.isEmpty
+          ? const Center(child: Text('No shops available in this hall', style: TextStyle(fontSize: 18)))
+          : GridView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _shops.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.9,
+        ),
+        itemBuilder: (context, index) {
+          final shop = _shops[index];
+          return ShopCard(
+            shop: shop,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ShopProductsPage(
+                    email: shop['email'] ?? '',
+                    shopName: shop['shop_type'] ?? 'Shop',
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
@@ -169,52 +167,54 @@ class _ShopCardState extends State<ShopCard> {
           borderRadius: BorderRadius.circular(16),
           onTap: widget.onTap,
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.store, size: 48, color: Colors.blueAccent),
+                const Icon(Icons.store, size: 40, color: Colors.blueAccent),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: Text(
+                    widget.shop['shop_type'] ?? 'Shop',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF203A43),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 10),
-                Text(
-                  widget.shop['shop_type'] ?? 'Shop',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF203A43),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 14, color: Colors.black),
-                    children: [
-                      const TextSpan(text: 'Owner: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                      TextSpan(text: widget.shop['full_name'] ?? 'Unknown'),
-                    ],
-                  ),
-                ),
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 14, color: Colors.black),
-                    children: [
-                      const TextSpan(text: 'Email: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                      TextSpan(text: widget.shop['email']),
-                    ],
-                  ),
-                ),
-                RichText(
-                  text: TextSpan(
-                    style: const TextStyle(fontSize: 14, color: Colors.black),
-                    children: [
-                      const TextSpan(text: 'Phone: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                      TextSpan(text: widget.shop['phone'] ?? 'Not provided'),
-                    ],
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _infoText("Owner", widget.shop['full_name'] ?? 'Unknown'),
+                        _infoText("Email", widget.shop['email']),
+                        _infoText("Phone", widget.shop['phone'] ?? 'Not provided'),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoText(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: const TextStyle(fontSize: 14, color: Colors.black),
+          children: [
+            TextSpan(text: '$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+            TextSpan(text: value),
+          ],
         ),
       ),
     );

@@ -59,7 +59,7 @@ class _AdminCreateEventPageState extends State<AdminCreateEventPage> {
     }
 
     int? maxVolunteers = int.tryParse(maxVolunteersStr);
-    if (maxVolunteers == null || maxVolunteers <= 0) {
+    if (maxVolunteers == null || maxVolunteers < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Maximum volunteers must be a positive number."),

@@ -18,6 +18,10 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   String selectedRole = 'Student';
   bool termsAccepted = false;
+  List<String> hallNames = [];
+  String? selectedHall;
+  bool isLoadingHalls = true;
+
 
   final TextEditingController field1Controller = TextEditingController();
   final TextEditingController field2Controller = TextEditingController();
@@ -32,6 +36,33 @@ class _SignUpPageState extends State<SignUpPage> {
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHallNames();
+  }
+  Future<void> _fetchHallNames() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/signup/all-halls'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        setState(() {
+          hallNames = List<String>.from(data['halls']);
+          isLoadingHalls = false;
+        });
+      } else {
+        throw Exception('Failed to load hall names');
+      }
+    } catch (e) {
+      setState(() {
+        isLoadingHalls = false;
+      });
+      _showMessage('Error fetching halls: $e');
+    }
+  }
+
+
 
   // Define your gradient colors
   final List<Color> gradientColors = [
@@ -76,7 +107,7 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
         ),
         title: const Text(
-          "Hall Seat Application",
+          "Hall Registration",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -171,7 +202,28 @@ class _SignUpPageState extends State<SignUpPage> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        _buildTextField('Hall Name', hallNameController),
+                        isLoadingHalls
+                            ? const CircularProgressIndicator()
+                            : DropdownButtonFormField<String>(
+                          value: selectedHall,
+                          decoration: const InputDecoration(
+                            labelText: 'Select Hall Name',
+                            border: UnderlineInputBorder(),
+                            labelStyle: TextStyle(color: Color(0xFF4a5568)),
+                          ),
+                          items: hallNames.map((hall) {
+                            return DropdownMenuItem<String>(
+                              value: hall,
+                              child: Text(hall),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              selectedHall = value;
+                            });
+                          },
+                        ),
+
                         const SizedBox(height: 15),
                         ..._buildFieldsForRole(),
                         const SizedBox(height: 15),
@@ -424,7 +476,8 @@ class _SignUpPageState extends State<SignUpPage> {
     final password = passwordController.text;
     final confirm = confirmPasswordController.text;
     final fullName = field1Controller.text.trim();
-    final hallName = hallNameController.text.trim();
+    final hallName = selectedHall ?? '';
+
 
     if (!email.contains('@') || !email.contains('.')) {
       return _showMessage('Enter a valid email.');
