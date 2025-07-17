@@ -63,7 +63,9 @@ class _NoticePageState extends State<NoticePage> {
   Future<void> fetchNotices() async {
     try {
       // Pass hallname as query parameter
-      final url = Uri.parse('$baseUrl/notices?hall_name=${Uri.encodeComponent(widget.hallname)}');
+      final url = Uri.parse(
+        '$baseUrl/notices?hall_name=${Uri.encodeComponent(widget.hallname)}',
+      );
 
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -93,11 +95,12 @@ class _NoticePageState extends State<NoticePage> {
       if (query.isEmpty) {
         _filteredNotices = List.from(_allNotices);
       } else {
-        _filteredNotices = _allNotices.where((notice) {
-          final titleLower = notice.title.toLowerCase();
-          final messageLower = notice.message.toLowerCase();
-          return titleLower.contains(query) || messageLower.contains(query);
-        }).toList();
+        _filteredNotices =
+            _allNotices.where((notice) {
+              final titleLower = notice.title.toLowerCase();
+              final messageLower = notice.message.toLowerCase();
+              return titleLower.contains(query) || messageLower.contains(query);
+            }).toList();
       }
     });
   }
@@ -144,7 +147,10 @@ class _NoticePageState extends State<NoticePage> {
           controller: _searchController,
           autofocus: true,
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 0,
+              horizontal: 8,
+            ),
             hintText: 'Search Notices...',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
@@ -166,17 +172,11 @@ class _NoticePageState extends State<NoticePage> {
   List<Widget> _buildAppBarActions() {
     if (_isSearching) {
       return [
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: _stopSearch,
-        ),
+        IconButton(icon: const Icon(Icons.clear), onPressed: _stopSearch),
       ];
     } else {
       return [
-        IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: _startSearch,
-        ),
+        IconButton(icon: const Icon(Icons.search), onPressed: _startSearch),
       ];
     }
   }
@@ -189,78 +189,97 @@ class _NoticePageState extends State<NoticePage> {
         backgroundColor: Colors.blueGrey,
         actions: _buildAppBarActions(),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage.isNotEmpty
-          ? Center(child: Text(_errorMessage))
-          : _filteredNotices.isEmpty
-          ? const Center(child: Text("No notices found"))
-          : ListView.builder(
-        itemCount: _filteredNotices.length,
-        itemBuilder: (context, index) {
-          final notice = _filteredNotices[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: ListTile(
-              title: Text(notice.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Posted: ${notice.timestamp.toLocal().toString().split(' ')[0]}",
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  Text(
-                    "Hall: ${notice.hallName}",
-                    style: const TextStyle(fontSize: 12, color: Colors.blue),
-                  ),
-                ],
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Confirm Delete'),
-                          content: const Text('Are you sure you want to delete this notice?'),
-                          actions: [
-                            TextButton(
-                              child: const Text('Cancel'),
-                              onPressed: () => Navigator.pop(context, false),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage.isNotEmpty
+              ? Center(child: Text(_errorMessage))
+              : _filteredNotices.isEmpty
+              ? const Center(child: Text("No notices found"))
+              : ListView.builder(
+                itemCount: _filteredNotices.length,
+                itemBuilder: (context, index) {
+                  final notice = _filteredNotices[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    child: ListTile(
+                      title: Text(
+                        notice.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Posted: ${notice.timestamp.toLocal().toString().split(' ')[0]}",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
                             ),
-                            TextButton(
-                              child: const Text('Delete'),
-                              onPressed: () => Navigator.pop(context, true),
+                          ),
+                          Text(
+                            "Hall: ${notice.hallName}",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue,
                             ),
-                          ],
-                        ),
-                      );
+                          ),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: const Text('Confirm Delete'),
+                                      content: const Text(
+                                        'Are you sure you want to delete this notice?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text('Cancel'),
+                                          onPressed:
+                                              () =>
+                                                  Navigator.pop(context, false),
+                                        ),
+                                        TextButton(
+                                          child: const Text('Delete'),
+                                          onPressed:
+                                              () =>
+                                                  Navigator.pop(context, true),
+                                        ),
+                                      ],
+                                    ),
+                              );
 
-                      if (confirmed ?? false) {
-                        await deleteNotice(notice.id);
-                      }
-                    },
-                  ),
-                  const Icon(Icons.arrow_forward_ios, size: 14),
-                ],
+                              if (confirmed ?? false) {
+                                await deleteNotice(notice.id);
+                              }
+                            },
+                          ),
+                          const Icon(Icons.arrow_forward_ios, size: 14),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => NoticeDetailPage(notice: notice),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NoticeDetailPage(notice: notice),
-                  ),
-                );
-              },
-            ),
-          );
-        },
-      ),
     );
   }
 }

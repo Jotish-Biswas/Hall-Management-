@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'student_profile.dart';
 import 'login.dart';
@@ -7,7 +9,6 @@ import 'show_event_page.dart';
 import 'shop_list_page.dart';
 import 'chat.dart';
 import 'seat_application.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'ServerLink.dart';
 
@@ -16,7 +17,12 @@ class StudentHomePage extends StatefulWidget {
   final String email;
   final String hallname;
 
-  const StudentHomePage({super.key, required this.name, required this.email, required this.hallname});
+  const StudentHomePage({
+    super.key, 
+    required this.name, 
+    required this.email, 
+    required this.hallname
+  });
 
   @override
   State<StudentHomePage> createState() => _StudentHomePageState();
@@ -27,13 +33,10 @@ class _StudentHomePageState extends State<StudentHomePage> {
 
   Future<bool> _checkIfApproved() async {
     try {
-      final url = Uri.parse('$baseUrl/api/seat/check-approval')
-          .replace(queryParameters: {
+      final url = Uri.parse('$baseUrl/api/seat/check-approval').replace(queryParameters: {
         'email': widget.email,
         'hall_name': widget.hallname,
       });
-
-      print('Checking approval URL: ${url.toString()}');
 
       final response = await http.get(url);
 
@@ -41,11 +44,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
         final data = json.decode(response.body);
         return data['approved'] ?? false;
       } else {
-        print('API Error: ${response.statusCode} - ${response.body}');
         throw Exception('Failed to check approval status');
       }
     } catch (e) {
-      print('Error checking approval status: $e');
       throw Exception('Connection error');
     }
   }
@@ -55,36 +56,51 @@ class _StudentHomePageState extends State<StudentHomePage> {
     List<Widget> pages = [
       _buildMainPage(),
       User_NoticePage(hallname: widget.hallname),
-      ChatPage(studentEmail: widget.email, hallName: widget.hallname),
+      ChatPage(
+        studentEmail: widget.email, 
+        hallName: widget.hallname,
+        onBack: () => setState(() => _selectedIndex = 0),
+      ),
       StudentProfilePage(
         email: widget.email,
         hallname: widget.hallname,
         onBack: () => setState(() => _selectedIndex = 0),
       ),
+      User_NoticePage(
+        hallname: widget.hallname,
+      )
     ];
 
     return Scaffold(
       appBar: _selectedIndex == 0
           ? AppBar(
-        backgroundColor: Colors.lightBlue,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Student Dashboard",
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-      )
+              elevation: 0,
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+              title: const Text(
+                "Student Dashboard", 
+                style: TextStyle(color: Colors.white)
+              ),
+              centerTitle: true,
+            )
           : null,
-      backgroundColor: Colors.lightBlue[50],
+      backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(child: pages[_selectedIndex]),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         currentIndex: _selectedIndex,
         onTap: (int index) => setState(() => _selectedIndex = index),
-        selectedItemColor: Colors.blueAccent,
+        selectedItemColor: Colors.deepPurple,
         unselectedItemColor: Colors.grey,
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
           BottomNavigationBarItem(icon: Icon(Icons.notifications), label: "Notice"),
@@ -96,48 +112,81 @@ class _StudentHomePageState extends State<StudentHomePage> {
   }
 
   Widget _buildMainPage() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          color: Colors.lightBlue,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Welcome back,", style: TextStyle(color: Colors.white)),
-              Text(
-                widget.name,
-                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF00C9FF), Color(0xFF92FE9D)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const SizedBox(height: 10),
-              const Text("Campus News", style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 10),
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.orangeAccent,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Welcome back,", 
+                  style: TextStyle(color: Colors.white, fontSize: 16)
                 ),
-                child: const Center(
-                  child: Text(
-                    "Dhaka University Hall",
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                Text(
+                  widget.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 10),
+                const SizedBox(height: 10),
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.deepPurpleAccent.withOpacity(0.8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.deepPurple.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        "Welcome to ${widget.hallname}",
+                        style: const TextStyle(
+                          color: Colors.white, 
+                          fontSize: 18, 
+                          fontWeight: FontWeight.w500
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const Padding(
-          padding: EdgeInsets.all(20.0),
-          child: Text("Main Menu", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        ),
-        Expanded(
-          child: GridView.count(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Text(
+              "Main Menu", 
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)
+            ),
+          ),
+          GridView.count(
             crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             crossAxisSpacing: 15,
             mainAxisSpacing: 15,
             children: [
@@ -149,7 +198,11 @@ class _StudentHomePageState extends State<StudentHomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SeatApplication(studentEmail: widget.email, hallname: widget.hallname),
+                      builder: (context) =>
+                          SeatApplication(
+                            studentEmail: widget.email, 
+                            hallname: widget.hallname
+                          ),
                     ),
                   );
                 },
@@ -161,12 +214,14 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => ShopListPage(hallname: widget.hallname)),
+                    MaterialPageRoute(
+                      builder: (_) => ShopListPage(hallname: widget.hallname)
+                    ),
                   );
                 },
               ),
               MenuTile(
-                icon: Icons.grade,
+                icon: Icons.report,
                 title: "Post Reports",
                 color: Colors.green,
                 onTap: () async {
@@ -174,58 +229,37 @@ class _StudentHomePageState extends State<StudentHomePage> {
                   showDialog(
                     context: context,
                     barrierDismissible: false,
-                    builder: (context) => const Center(child: CircularProgressIndicator()),
+                    builder: (context) => const Center(
+                      child: CircularProgressIndicator()
+                    ),
                   );
 
                   try {
                     final isApproved = await _checkIfApproved();
-
                     navigator.pop();
 
                     if (isApproved) {
                       navigator.push(
                         MaterialPageRoute(
-                          builder: (_) => PostReportPage(email: widget.email, hallname: widget.hallname),
+                          builder: (_) => PostReportPage(
+                            email: widget.email, 
+                            hallname: widget.hallname
+                          ),
                         ),
                       );
                     } else {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text("Access Denied"),
-                          content: const Text("Only resident students can post reports."),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text("OK"),
-                            ),
-                          ],
-                        ),
-                      );
+                      _showDialog("Access Denied", 
+                        "Only resident students can post reports.");
                     }
                   } catch (e) {
                     navigator.pop();
-
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text("Connection Error"),
-                        content: const Text("Could not verify your status. Please try again."),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text("OK"),
-                          ),
-                        ],
-                      ),
-                    );
+                    _showDialog("Connection Error", 
+                      "Could not verify your status. Please try again.");
                   }
                 },
               ),
-              // Emergency Service removed here
-
               MenuTile(
-                icon: Icons.event_available,
+                icon: Icons.event,
                 title: "Events",
                 color: Colors.deepPurple,
                 onTap: () {
@@ -243,8 +277,25 @@ class _StudentHomePageState extends State<StudentHomePage> {
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
+
+  void _showDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: const Text("OK")
+          ),
+        ],
+      ),
     );
   }
 }
@@ -265,22 +316,35 @@ class MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color: color.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: ListTile(
-            leading: Icon(icon, color: Colors.white, size: 30),
-            title: Text(
-              title,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+          color: color.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.4),
+              offset: const Offset(0, 6),
+              blurRadius: 8,
             ),
-          ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 40, color: Colors.white),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16, 
+                color: Colors.white, 
+                fontWeight: FontWeight.bold
+              ),
+            ),
+          ],
         ),
       ),
     );

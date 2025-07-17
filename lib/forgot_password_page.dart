@@ -89,70 +89,143 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Forgot Password', style: TextStyle(color: Colors.blue)),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0F2027),
+                Color(0xFF203A43),
+                Color(0xFF2C5364),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 154, 151, 151),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(6),
+              child: const Icon(Icons.arrow_back, color: Colors.lightBlue, size: 24),
+            ),
+          ),
+        ),
+        title: const Text('Forgot Password', style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.blue),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Enter your email',
-                border: OutlineInputBorder(),
+            // Email input inside a card
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 6,
+              shadowColor: Colors.blue.shade200,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Enter your email',
+                    border: InputBorder.none,
+                    prefixIcon: Icon(Icons.email, color: Colors.blue),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
               ),
-              keyboardType: TextInputType.emailAddress,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             if (!isCodeSent)
-              ElevatedButton(
-                onPressed: isLoading ? null : sendVerificationCode,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 6,
+                shadowColor: Colors.blue.shade200,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : sendVerificationCode,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade700,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Send Verification Code',
+                            style: TextStyle(fontSize: 16, color: Colors.white)),
+                  ),
                 ),
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Send Verification Code', style: TextStyle(color: Colors.white)),
               ),
 
             if (isCodeSent) ...[
-              TextField(
-                controller: codeController,
-                decoration: const InputDecoration(
-                  labelText: 'Enter verification code',
-                  border: OutlineInputBorder(),
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 6,
+                shadowColor: Colors.blue.shade200,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  child: TextField(
+                    controller: codeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Enter verification code',
+                      border: InputBorder.none,
+                      prefixIcon: Icon(Icons.verified_user, color: Colors.blue),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
                 ),
-                keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: isLoading
-                    ? null
-                    : () async {
-                  bool verified = await verifyCode();
-                  if (verified) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ResetPasswordPage(email: emailController.text.trim()),
-                      ),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              const SizedBox(height: 24),
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 6,
+                shadowColor: Colors.blue.shade200,
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: isLoading
+                        ? null
+                        : () async {
+                            bool verified = await verifyCode();
+                            if (verified) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ResetPasswordPage(email: emailController.text.trim()),
+                                ),
+                              );
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade700,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Verify & Continue',
+                            style: TextStyle(fontSize: 16, color: Colors.white)),
+                  ),
                 ),
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Verify & Continue', style: TextStyle(color: Colors.white)),
               ),
             ],
           ],
@@ -161,5 +234,3 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
   }
 }
-
-

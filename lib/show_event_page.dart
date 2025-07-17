@@ -90,15 +90,15 @@ class _StudentEventPageState extends State<StudentEventPage> {
 
     final body = jsonEncode(asVolunteer
         ? {
-      "student_name": name,
-      "student_email": email,
-      "registration": reg,
-    }
+            "student_name": name,
+            "student_email": email,
+            "registration": reg,
+          }
         : {
-      "name": name,
-      "email": email,
-      "registration": reg,
-    });
+            "name": name,
+            "email": email,
+            "registration": reg,
+          });
 
     try {
       final response = await http.post(
@@ -145,85 +145,203 @@ class _StudentEventPageState extends State<StudentEventPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Events - ${widget.hallName}"),
-        backgroundColor: Colors.blue,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0F2027),
+                Color(0xFF203A43),
+                Color(0xFF2C5364),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(6),
+              child: const Icon(Icons.arrow_back, color: Colors.lightBlue, size: 24),
+            ),
+          ),
+        ),
+        title: Text("Events - ${widget.hallName}", style: const TextStyle(color: Colors.white)),
+        centerTitle: true,
       ),
       body: events.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-        itemCount: events.length,
-        itemBuilder: (context, index) {
-          final event = events[index];
-          final maxVol = event['max_volunteers'] ?? 0;
-          final currVol = (event['interested_students'] ?? []).length;
-          final isFull = currVol >= maxVol;
-          final userJoined = hasParticipated(event);
-          final userVolunteered = hasVolunteered(event);
+              itemCount: events.length,
+              itemBuilder: (context, index) {
+                final event = events[index];
+                final maxVol = event['max_volunteers'] ?? 0;
+                final currVol = (event['interested_students'] ?? []).length;
+                final isFull = currVol >= maxVol;
+                final userJoined = hasParticipated(event);
+                final userVolunteered = hasVolunteered(event);
 
-          return Card(
-            margin: const EdgeInsets.all(10),
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(event['title'],
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  Text("Date: ${event['date']}"),
-                  Text("Expire: ${event['expiry_date'] ?? "N/A"}"),
-                  Text(
-                    "Volunteers: $currVol / $maxVol",
-                    style: const TextStyle(color: Colors.deepPurple),
-                  ),
-                  Text(
-                    "Hall: ${event['hall_name']}",
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(event['description'] ?? "No description",
-                      style: const TextStyle(color: Colors.black87)),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: userJoined
-                            ? null
-                            : () => participate(event['id'], false),
-                        icon: const Icon(Icons.group),
-                        label: const Text("Participate"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: userJoined ? Colors.grey : Colors.white,
+                return MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  onEnter: (_) => setState(() => hoveredIndex = index),
+                  onExit: (_) => setState(() => hoveredIndex = -1),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: hoveredIndex == index ? Colors.blue.shade50 : Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
                         ),
+                      ],
+                      border: Border.all(
+                        color: hoveredIndex == index ? Colors.blue.shade300 : Colors.grey.shade300,
+                        width: 1.5,
                       ),
-                      isFull
-                          ? const Text(
-                        "No Volunteer Needed",
-                        style: TextStyle(
-                            color: Colors.red, fontWeight: FontWeight.bold),
-                      )
-                          : ElevatedButton.icon(
-                        onPressed: userJoined
-                            ? null
-                            : () => participate(event['id'], true),
-                        icon: const Icon(Icons.volunteer_activism),
-                        label: const Text("Volunteer"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: userJoined
-                              ? Colors.grey
-                              : Colors.deepPurple[50],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event['title'],
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
                         ),
-                      ),
-                    ],
-                  )
-                ],
-              ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today, size: 18, color: Colors.blueAccent),
+                            const SizedBox(width: 6),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.black87, fontSize: 14),
+                                children: [
+                                  const TextSpan(
+                                      text: 'Date: ',
+                                      style: TextStyle(fontWeight: FontWeight.bold)),
+                                  TextSpan(text: event['date']),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.hourglass_bottom, size: 18, color: Colors.orange),
+                            const SizedBox(width: 6),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.black87, fontSize: 14),
+                                children: [
+                                  const TextSpan(
+                                      text: 'Expiry: ',
+                                      style: TextStyle(fontWeight: FontWeight.bold)),
+                                  TextSpan(text: event['expiry_date'] ?? "N/A"),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.volunteer_activism, size: 18, color: Colors.purple),
+                            const SizedBox(width: 6),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.deepPurple, fontSize: 14),
+                                children: [
+                                  const TextSpan(
+                                      text: 'Volunteers: ',
+                                      style: TextStyle(fontWeight: FontWeight.bold)),
+                                  TextSpan(text: '$currVol / $maxVol'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.home, size: 18, color: Colors.grey),
+                            const SizedBox(width: 6),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                children: [
+                                  const TextSpan(
+                                      text: 'Hall: ',
+                                      style: TextStyle(fontWeight: FontWeight.bold)),
+                                  TextSpan(text: event['hall_name']),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          event['description'] ?? "No description",
+                          style: const TextStyle(color: Colors.black87, fontSize: 15),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: userJoined ? null : () => participate(event['id'], false),
+                              icon: const Icon(Icons.group),
+                              label: const Text("Participate"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: userJoined ? Colors.grey : Colors.blue,
+                              ),
+                            ),
+                            isFull
+                                ? const Text(
+                                    "No Volunteer Needed",
+                                    style: TextStyle(
+                                        color: Colors.red, fontWeight: FontWeight.bold),
+                                  )
+                                : ElevatedButton.icon(
+                                    onPressed:
+                                        userJoined ? null : () => participate(event['id'], true),
+                                    icon: const Icon(Icons.volunteer_activism),
+                                    label: const Text("Volunteer"),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: userJoined
+                                          ? Colors.grey
+                                          : Colors.deepPurpleAccent.shade100,
+                                    ),
+                                  ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
+
+  int hoveredIndex = -1;
 }

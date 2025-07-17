@@ -1,0 +1,2 @@
+C:/Users/user/Documents/Hall-Management-/android/app/.cxx/Debug/5e3e4057/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/user/Documents/Hall-Management-/android/app/.cxx/Debug/5e3e4057/armeabi-v7a/CMakeFiles/rebuild_cache.dir

@@ -6,7 +6,7 @@ import 'ServerLink.dart';
 class TeacherUserListPage extends StatefulWidget {
   final String hallname;  // <-- Add hallname here
 
-  const TeacherUserListPage({super.key, required this.hallname});
+  const TeacherUserListPage({super.key, required this.hallname, required String userRole});
 
   @override
   State<TeacherUserListPage> createState() => _TeacherUserListPageState();

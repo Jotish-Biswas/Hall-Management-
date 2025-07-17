@@ -12,12 +12,12 @@ class CreateHallPage extends StatefulWidget {
 
 class _CreateHallPageState extends State<CreateHallPage> {
   final fullNameController = TextEditingController();
-  final emailController    = TextEditingController();
+  final emailController = TextEditingController();
   final hallNameController = TextEditingController();
   final passwordController = TextEditingController();
-  final confirmController  = TextEditingController();
+  final confirmController = TextEditingController();
 
-  bool _obscurePassword       = true;
+  bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   void _showMessage(String msg) {
@@ -25,11 +25,8 @@ class _CreateHallPageState extends State<CreateHallPage> {
   }
 
   Future<bool> _verifyNewHallOTP(String email, String hallName) async {
-    // 1) Request OTP
     final resp1 = await http.post(
-      Uri.parse(
-          '$baseUrl/utils/send-verification-code-new-hall?hall_name=$hallName'
-      ),
+      Uri.parse('$baseUrl/utils/send-verification-code-new-hall?hall_name=$hallName'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'email': email}),
     );
@@ -39,7 +36,6 @@ class _CreateHallPageState extends State<CreateHallPage> {
       return false;
     }
 
-    // 2) Prompt for code
     String? code = await showDialog<String>(
       context: context,
       builder: (_) {
@@ -52,21 +48,14 @@ class _CreateHallPageState extends State<CreateHallPage> {
             decoration: const InputDecoration(hintText: '6-digit code'),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, ctrl.text.trim()),
-              child: const Text('OK'),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(context, ctrl.text.trim()), child: const Text('OK')),
           ],
         );
       },
     );
     if (code == null || code.isEmpty) return false;
 
-    // 3) Verify code
     final resp2 = await http.post(
       Uri.parse('$baseUrl/utils/verify-code'),
       headers: {'Content-Type': 'application/json'},
@@ -81,16 +70,12 @@ class _CreateHallPageState extends State<CreateHallPage> {
 
   void _createHall() async {
     final fullName = fullNameController.text.trim();
-    final email    = emailController.text.trim();
+    final email = emailController.text.trim();
     final hallName = hallNameController.text.trim();
     final password = passwordController.text;
-    final confirm  = confirmController.text;
+    final confirm = confirmController.text;
 
-    if (fullName.isEmpty ||
-        email.isEmpty ||
-        hallName.isEmpty ||
-        password.isEmpty ||
-        confirm.isEmpty) {
+    if (fullName.isEmpty || email.isEmpty || hallName.isEmpty || password.isEmpty || confirm.isEmpty) {
       _showMessage("Please fill all fields.");
       return;
     }
@@ -103,11 +88,9 @@ class _CreateHallPageState extends State<CreateHallPage> {
       return;
     }
 
-    // OTP step
     bool ok = await _verifyNewHallOTP(email, hallName);
     if (!ok) return;
 
-    // Create hall API
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -130,11 +113,7 @@ class _CreateHallPageState extends State<CreateHallPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => AdminHomePage(
-            name: fullName,
-            email: email,
-            hallname: hallName,
-          ),
+          builder: (_) => AdminHomePage(name: fullName, email: email, hallname: hallName),
         ),
       );
     } else {
@@ -146,22 +125,100 @@ class _CreateHallPageState extends State<CreateHallPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create New Hall')),
+      appBar: AppBar(
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 154, 151, 151),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(6),
+              child: const Icon(Icons.arrow_back, color: Colors.lightBlue, size: 24),
+            ),
+          ),
+        ),
+        title: const Text("Create New Hall", style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildField("Full Name", fullNameController),
-              _buildField("Email", emailController),
-              _buildField("Hall Name", hallNameController),
-              _buildField("Password", passwordController, isPassword: true),
-              _buildField("Confirm Password", confirmController, isPassword: true),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _createHall,
-                style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-                child: const Text("Create Hall as Admin"),
+              _buildCardField(
+                label: "Full Name",
+                controller: fullNameController,
+                icon: Icons.person,
+              ),
+              _buildCardField(
+                label: "Email",
+                controller: emailController,
+                icon: Icons.email,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              _buildCardField(
+                label: "Hall Name",
+                controller: hallNameController,
+                icon: Icons.apartment,
+              ),
+              _buildCardField(
+                label: "Password",
+                controller: passwordController,
+                icon: Icons.lock,
+                isPassword: true,
+                obscureText: _obscurePassword,
+                toggleObscure: () {
+                  setState(() => _obscurePassword = !_obscurePassword);
+                },
+              ),
+              _buildCardField(
+                label: "Confirm Password",
+                controller: confirmController,
+                icon: Icons.lock_outline,
+                isPassword: true,
+                obscureText: _obscureConfirmPassword,
+                toggleObscure: () {
+                  setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
+                },
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _createHall,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: const Color(0xFF203A43),
+                    elevation: 5,
+                    shadowColor: Colors.blueAccent,
+                  ),
+                  child: const Text(
+                    "Create Hall as Admin",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
               ),
             ],
           ),
@@ -170,33 +227,42 @@ class _CreateHallPageState extends State<CreateHallPage> {
     );
   }
 
-  Widget _buildField(String label, TextEditingController ctrl, {bool isPassword = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextField(
-        controller: ctrl,
-        obscureText: isPassword
-            ? (ctrl == passwordController ? _obscurePassword : _obscureConfirmPassword)
-            : false,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixIcon: isPassword
-              ? IconButton(
-            icon: Icon(ctrl == passwordController
-                ? (_obscurePassword ? Icons.visibility_off : Icons.visibility)
-                : (_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility)),
-            onPressed: () {
-              setState(() {
-                if (ctrl == passwordController) {
-                  _obscurePassword = !_obscurePassword;
-                } else {
-                  _obscureConfirmPassword = !_obscureConfirmPassword;
-                }
-              });
-            },
-          )
-              : null,
+  Widget _buildCardField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? toggleObscure,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      color: const Color(0xFFE3F2FD), // light blue shade
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          obscureText: isPassword ? obscureText : false,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            labelText: label,
+            labelStyle: const TextStyle(color: Color(0xFF0D47A1)),
+            icon: Icon(icon, color: const Color(0xFF0D47A1)),
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: const Color(0xFF0D47A1),
+                    ),
+                    onPressed: toggleObscure,
+                  )
+                : null,
+          ),
+          style: const TextStyle(color: Color(0xFF0D47A1)),
         ),
       ),
     );
