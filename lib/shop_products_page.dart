@@ -21,7 +21,7 @@ class _ShopProductsPageState extends State<ShopProductsPage> {
   List<dynamic> products = [];
   bool isLoading = true;
   String? errorMessage;
-  Set<String> expandedComments = {}; // to manage comment expansion
+  Set<String> expandedComments = {};
 
   @override
   void initState() {
@@ -61,7 +61,7 @@ class _ShopProductsPageState extends State<ShopProductsPage> {
         body: jsonEncode({
           "email": widget.email,
           "product_name": productName,
-          "user_email": "student@example.com" // Replace with logged-in user's email
+          "user_email": "student@example.com"
         }));
     if (response.statusCode == 200) {
       fetchProducts();
@@ -90,168 +90,225 @@ class _ShopProductsPageState extends State<ShopProductsPage> {
     final isExpanded = expandedComments.contains(item['name']);
 
     return StatefulBuilder(builder: (context, setCardState) {
-      return MouseRegion(
-        onEnter: (_) => setCardState(() {}),
-        onExit: (_) => setCardState(() {}),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: Colors.white,
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              if (item['image_base64'] != null)
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: Image.memory(
-                    base64Decode(item['image_base64']),
-                    height: 220,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 12,
+              spreadRadius: 2,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Product Image
+            if (item['image_base64'] != null)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Image.memory(
+                  base64Decode(item['image_base64']),
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
                 ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item['name'] ?? 'No Name',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 6),
-                    Text("Quantity: ${item['quantity'] ?? 'N/A'}"),
-                    Text("Price: ${item['price'] ?? 'N/A'}"),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            buildReactionButton(Icons.thumb_up, Colors.green,
-                                () => reactToProduct('like', item['name'])),
-                            Text("${item['likes'] ?? 0}"),
-                            const SizedBox(width: 10),
-                            buildReactionButton(Icons.thumb_down, Colors.red,
-                                () => reactToProduct('dislike', item['name'])),
-                            Text("${item['dislikes'] ?? 0}"),
-                          ],
-                        ),
-                        buildCommentButton(() {
-                          setState(() {
-                            if (isExpanded) {
-                              expandedComments.remove(item['name']);
-                            } else {
-                              expandedComments.add(item['name']);
-                            }
-                          });
-                        }),
-                      ],
+              ),
+            
+            // Product Details
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['name'] ?? 'No Name',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                    if (isExpanded) ...[
-                      const Divider(),
-                      if (item['comments'] != null && item['comments'].isNotEmpty)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text("Comments:",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14)),
-                            const SizedBox(height: 6),
-                            ...item['comments'].map<Widget>((c) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    padding: const EdgeInsets.all(8),
-                                    child: Text("- ${c['user']}: ${c['text']}"),
-                                  ),
-                                )),
-                          ],
-                        ),
-                      const SizedBox(height: 8),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Quantity and Price
+                  Row(
+                    children: [
+                      _buildDetailChip(
+                        Icons.inventory_2,
+                        '${item['quantity'] ?? 'N/A'} in stock',
+                        Colors.blue[100]!,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildDetailChip(
+                        Icons.attach_money,
+                        '${item['price'] ?? 'N/A'}',
+                        Colors.green[100]!,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Reaction Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       Row(
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: commentController,
-                              decoration: InputDecoration(
-                                hintText: "Write a comment...",
-                                filled: true,
-                                fillColor: Colors.grey[100],
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: BorderSide.none,
-                                ),
-                              ),
-                            ),
+                          _buildReactionButton(
+                            Icons.thumb_up,
+                            Colors.green,
+                            '${item['likes'] ?? 0}',
+                            () => reactToProduct('like', item['name']),
                           ),
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.send, color: Colors.lightBlue),
-                            onPressed: () {
-                              final text = commentController.text.trim();
-                              if (text.isNotEmpty) {
-                                submitComment(item['name'], text);
-                                commentController.clear();
-                              }
-                            },
+                          const SizedBox(width: 12),
+                          _buildReactionButton(
+                            Icons.thumb_down,
+                            Colors.red,
+                            '${item['dislikes'] ?? 0}',
+                            () => reactToProduct('dislike', item['name']),
                           ),
                         ],
                       ),
+                      _buildCommentButton(isExpanded, () {
+                        setState(() {
+                          if (isExpanded) {
+                            expandedComments.remove(item['name']);
+                          } else {
+                            expandedComments.add(item['name']);
+                          }
+                        });
+                      }),
                     ],
+                  ),
+                  
+                  // Comments Section
+                  if (isExpanded) ...[
+                    const Divider(height: 24),
+                    if (item['comments'] != null && item['comments'].isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Comments:",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ...item['comments'].map<Widget>((c) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.all(12),
+                                  child: Text(
+                                    "${c['user']}: ${c['text']}",
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              )),
+                        ],
+                      ),
+                    const SizedBox(height: 8),
+                    
+                    // Comment Input
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: commentController,
+                            decoration: InputDecoration(
+                              hintText: "Write a comment...",
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.send, color: Colors.blue),
+                          onPressed: () {
+                            final text = commentController.text.trim();
+                            if (text.isNotEmpty) {
+                              submitComment(item['name'], text);
+                              commentController.clear();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ],
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
     });
   }
 
-  Widget buildReactionButton(IconData icon, Color color, VoidCallback onPressed) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+  Widget _buildDetailChip(IconData icon, String text, Color backgroundColor) {
+    return Chip(
+      avatar: Icon(icon, size: 16, color: Colors.black54),
+      label: Text(text, style: const TextStyle(fontSize: 12)),
+      backgroundColor: backgroundColor,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color, width: 1.2),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: color),
-        onPressed: onPressed,
       ),
     );
   }
 
-  Widget buildCommentButton(VoidCallback onPressed) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.lightBlue.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.lightBlue, width: 1.2),
+  Widget _buildReactionButton(
+      IconData icon, Color color, String count, VoidCallback onPressed) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: color,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: color.withOpacity(0.1),
       ),
-      child: TextButton.icon(
-        onPressed: onPressed,
-        icon: const Icon(Icons.comment, color: Colors.lightBlue),
-        label: const Text("Comment", style: TextStyle(color: Colors.lightBlue)),
+      icon: Icon(icon, size: 18),
+      label: Text(count),
+    );
+  }
+
+  Widget _buildCommentButton(bool isExpanded, VoidCallback onPressed) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: Colors.blue,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: Colors.blue.withOpacity(0.1),
       ),
+      icon: Icon(isExpanded ? Icons.comment : Icons.comment_outlined, size: 18),
+      label: Text(isExpanded ? 'Hide' : 'Comment'),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FA),
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         elevation: 0,
         flexibleSpace: Container(
@@ -263,37 +320,40 @@ class _ShopProductsPageState extends State<ShopProductsPage> {
             ),
           ),
         ),
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 154, 151, 151),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 4,
-                    offset: const Offset(2, 2),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(6),
-              child: const Icon(Icons.arrow_back, color: Colors.lightBlue, size: 24),
-            ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          "Products - ${widget.shopName}",
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        title: Text("Products of ${widget.shopName}", style: const TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
+            )
           : errorMessage != null
-              ? Center(child: Text(errorMessage!))
-              : ListView.builder(
-                  itemCount: products.length,
-                  itemBuilder: (context, index) => buildProductCard(products[index]),
+              ? Center(
+                  child: Text(
+                    errorMessage!,
+                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: fetchProducts,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 8, bottom: 16),
+                    itemCount: products.length,
+                    itemBuilder: (context, index) => buildProductCard(products[index]),
+                  ),
                 ),
     );
   }

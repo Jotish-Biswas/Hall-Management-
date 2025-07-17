@@ -74,22 +74,54 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
       ),
     );
   }
+
   void logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Clears login info
+    await prefs.clear();
     Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Shopkeeper Profile"),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 154, 151, 151),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: Offset(2, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(6),
+              child: const Icon(Icons.arrow_back, color: Colors.lightBlue, size: 24),
+            ),
+          ),
+        ),
+        title: const Text("Shopkeeper Profile", style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        backgroundColor: Colors.deepOrange,
         actions: [
           IconButton(
-            icon: const Icon(Icons.camera_alt),
+            icon: const Icon(Icons.camera_alt, color: Colors.white),
             tooltip: "Upload Profile Picture",
             onPressed: _uploadImage,
           ),
@@ -114,76 +146,95 @@ class _ShopkeeperProfilePageState extends State<ShopkeeperProfilePage> {
           final profileImage = data['profile_image'];
           final hall = data['hall_name'] ?? widget.hallname;
 
-          return Padding(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 70,
-                        backgroundColor: Colors.white,
-                        backgroundImage: profileImage != null
-                            ? MemoryImage(base64Decode(profileImage))
-                            : null,
-                        child: profileImage == null
-                            ? const Icon(Icons.person, size: 60, color: Colors.grey)
-                            : null,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 70,
+                      backgroundColor: Colors.white,
+                      backgroundImage: profileImage != null
+                          ? MemoryImage(base64Decode(profileImage))
+                          : null,
+                      child: profileImage == null
+                          ? const Icon(Icons.person, size: 60, color: Colors.grey)
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: IconButton(
+                        onPressed: _uploadImage,
+                        icon: const Icon(Icons.camera_alt, color: Colors.blueAccent),
+                        tooltip: 'Upload Profile Picture',
                       ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: IconButton(
-                          onPressed: _uploadImage,
-                          icon: const Icon(Icons.camera_alt, color: Colors.deepOrange),
-                          tooltip: 'Upload Profile Picture',
-                        ),
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text(email, style: const TextStyle(fontSize: 16, color: Colors.grey)),
-                  const Divider(height: 30, thickness: 1.5),
-                  Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 2,
+                    )
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text(email, style: const TextStyle(fontSize: 16, color: Colors.grey)),
+                const Divider(height: 30, thickness: 1.5),
+                Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  elevation: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        ListTile(
-                          leading: const Icon(Icons.phone, color: Colors.deepOrange),
-                          title: Text("Phone: $phone"),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.store, color: Colors.deepOrange),
-                          title: Text("Shop Name: $shopName"),
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.location_city, color: Colors.deepOrange),
-                          title: Text("Hall Name: $hall"),
-                        ),
+                        profileRow(Icons.phone, "Phone", phone),
+                        profileRow(Icons.store, "Shop Name", shopName),
+                        profileRow(Icons.location_city, "Hall Name", hall),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton.icon(
-                    onPressed: () => _showLogoutConfirmation(context),
-                    icon: const Icon(Icons.logout),
-                    label: const Text("Logout"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepOrange,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-                    ),
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton.icon(
+                  onPressed: () => _showLogoutConfirmation(context),
+                  icon: const Icon(Icons.logout),
+                  label: const Text("Logout"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF203A43),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    elevation: 5,
+                    shadowColor: Colors.black45,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget profileRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.blueAccent),
+          const SizedBox(width: 10),
+          Text(
+            "$label: ",
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(color: Colors.black87),
+            ),
+          ),
+        ],
       ),
     );
   }

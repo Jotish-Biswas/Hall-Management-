@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'ServerLink.dart';
-import 'image_picker_helper.dart'; // conditional import
+import 'image_picker_helper.dart'; // custom helper
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TeacherProfilePage extends StatefulWidget {
@@ -73,34 +73,66 @@ class _TeacherProfilePageState extends State<TeacherProfilePage> {
       ),
     );
   }
+
   void logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Clears login info
+    await prefs.clear();
     Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Teacher Profile"),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 154, 151, 151),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(6),
+              child: const Icon(Icons.arrow_back, color: Colors.lightBlue, size: 24),
+            ),
+          ),
+        ),
+        title: const Text("Teacher Profile", style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        backgroundColor: Colors.blue,
         actions: [
           IconButton(
-            icon: const Icon(Icons.camera_alt),
+            icon: const Icon(Icons.camera_alt, color: Colors.white),
             tooltip: "Upload Profile Picture",
             onPressed: _uploadImage,
           ),
         ],
       ),
-      backgroundColor: Colors.teal[50],
+      backgroundColor: const Color(0xFFE8F0F2),
       body: FutureBuilder<Map<String, dynamic>>(
         future: teacherData,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text("Error: \${snapshot.error}"));
+            return Center(child: Text("Error: ${snapshot.error}"));
           } else if (!snapshot.hasData) {
             return const Center(child: Text("No profile data found."));
           }

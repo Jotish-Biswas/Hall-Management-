@@ -40,7 +40,6 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   }
 
   Future<void> fetchParticipants(String eventId) async {
-    // UPDATED: Use the new endpoint to get full event details
     final url = Uri.parse('$baseUrl/events/$eventId?hall_name=${widget.hallName}');
     try {
       final response = await http.get(url);
@@ -119,20 +118,20 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         ...volunteers.map<Widget>((v) => ListTile(
-          leading: const Icon(Icons.volunteer_activism, color: Colors.deepPurple),
-          title: Text(v['student_name'] ?? 'Unknown'),
-          subtitle: Text("Reg: ${v['registration']} | Email: ${v['student_email']}"),
-        )),
+              leading: const Icon(Icons.volunteer_activism, color: Colors.deepPurple),
+              title: Text(v['student_name'] ?? 'Unknown'),
+              subtitle: Text("Reg: ${v['registration']} | Email: ${v['student_email']}"),
+            )),
         const SizedBox(height: 10),
         Text(
           "General Participants (${general.length}):",
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         ...general.map<Widget>((p) => ListTile(
-          leading: const Icon(Icons.group, color: Colors.teal),
-          title: Text(p['name'] ?? 'Unknown'),
-          subtitle: Text("Reg: ${p['registration']} | Email: ${p['email']}"),
-        )),
+              leading: const Icon(Icons.group, color: Colors.teal),
+              title: Text(p['name'] ?? 'Unknown'),
+              subtitle: Text("Reg: ${p['registration']} | Email: ${p['email']}"),
+            )),
       ],
     );
   }
@@ -141,61 +140,92 @@ class _AdminEventParticipationPageState extends State<AdminEventParticipationPag
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Event Participation - ${widget.hallName}"),
-        backgroundColor: Colors.blueGrey,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 154, 151, 151),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(6),
+              child: const Icon(Icons.arrow_back, color: Colors.lightBlue, size: 24),
+            ),
+          ),
+        ),
+        title: Text("Event Participation - ${widget.hallName}", style: const TextStyle(color: Colors.white)),
+        centerTitle: true,
       ),
       body: events.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-        padding: const EdgeInsets.all(10),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              "Events for ${widget.hallName}",
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueGrey,
-              ),
+              padding: const EdgeInsets.all(10),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    "Events for ${widget.hallName}",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                ),
+                ...events.map((event) {
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: ListTile(
+                      title: Text(event['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Date: ${event['date']}"),
+                          Text("Expire: ${event['expiry_date']}"),
+                          Text("Hall: ${event['hall_name']}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                      trailing: Wrap(
+                        spacing: 8,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () => fetchParticipants(event['id']),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
+                            child: const Text("Participants"),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _confirmDelete(event['id'], event['title']),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+                if (participationData.isNotEmpty) const Divider(thickness: 1.5),
+                if (participationData.isNotEmpty) _buildParticipationList(),
+              ],
             ),
-          ),
-
-          ...events.map((event) {
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              elevation: 4,
-              child: ListTile(
-                title: Text(event['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Date: ${event['date']}"),
-                    Text("Expire: ${event['expiry_date']}"),
-                    Text("Hall: ${event['hall_name']}",
-                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
-                ),
-                trailing: Wrap(
-                  spacing: 8,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => fetchParticipants(event['id']),
-                      child: const Text("Participants"),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _confirmDelete(event['id'], event['title']),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-          if (participationData.isNotEmpty) const Divider(),
-          if (participationData.isNotEmpty) _buildParticipationList(),
-        ],
-      ),
     );
   }
 }
