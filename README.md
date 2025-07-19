@@ -15,7 +15,7 @@ An app for managing multiple hall's student, teachers and shopkeepers and their 
 
 ### User Instruction:
 in case of signing up as a member of an existing hall, you need to provide valid mail and verify it. Once you get approved, you are able to access the features. For openning a new hall you can create new hall as admin.
-### apk link:
+### apk link: https://github.com/Nadim-2003/Du-Hall/releases/download/v1.0.0/base.apk
 
 ### youtube link:
 
